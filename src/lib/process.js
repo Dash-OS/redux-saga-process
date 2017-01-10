@@ -9,13 +9,22 @@ function cancellablePromise(p, onCancel) {
 }
 
 class Process {
-
+  
   constructor(props, State) {
+    console.log('Constructs')
+    console.log(new.target)
     this.props = props
     this.__classTasks = []
     this.__savedTasks = {}
-    this.__checkStatics = this.__checkStatics
-    this.__getPattern = this.__getPattern
+    this.__checkStatics = this.__checkStatics.bind(this)
+    this.__getPattern = this.__getPattern.bind(this)
+    this.select = this.select.bind(this)
+    this.createObservable = this.createObservable.bind(this)
+    this.cancelTask = this.cancelTask.bind(this)
+    this.cancelTaskCategory = this.cancelTaskCategory.bind(this)
+    this.saveTask = this.saveTask.bind(this)
+    this.cancelAllTasks = this.cancelAllTasks.bind(this)
+    this.processInit = this.processInit.bind(this)
     this.state = State
   }
 
@@ -149,7 +158,7 @@ class Process {
     }
   }
 
-  * cancelCategory(category) {
+  * cancelTaskCategory(category) {
     if (this.__savedTasks[category]) {
       const ids = Object.keys(this.__savedTasks[category])
       for (const id of ids) {
