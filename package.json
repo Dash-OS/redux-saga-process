@@ -12,9 +12,6 @@
     "type": "git",
     "url": "git+https://github.com/Dash-OS/redux-saga-process.git"
   },
-  "bin": {
-    "redux-saga-process": "./bin/main.js"
-  },
   "files": [
     "bin",
     "build",
