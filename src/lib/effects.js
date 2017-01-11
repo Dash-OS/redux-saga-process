@@ -1,27 +1,38 @@
-import { spawn } from 'redux-saga/effects'
+import { spawn, fork } from 'redux-saga/effects'
 import { createActions } from './createActions'
 import { createSelector } from 'reselect'
 import { combineReducers } from 'redux'
 
 const props = { compiled: false, mergeReducers: true }
 
+const processName = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
+
 function* runProcesses(categories) {
-  for (const categoryID of Object.keys(categories)) {
+  for ( const categoryID in categories ) {
     const category = categories[categoryID]
-    for (const processID of Object.keys(category)) {
-      const process = category[processID]
-      const { config = {} } = process
-      if ( ! props.compiled ) { 
-        console.log('Did not connect to reducers before calling runProcesses')
-        buildProcess(process)
+    if ( typeof category !== 'object' ) { continue }
+    if ( processName(category) === 'redux-saga-process-class' ) {
+      yield fork(runProcess, category)
+    } else {
+      for ( const processID in category ) {
+        const process = category[processID]
+        if ( processName(process) === 'redux-saga-process-class' ) {
+          yield fork(runProcess, process)
+        } else { continue }
       }
-      const SagaProcess = new process(config)
-      yield spawn(SagaProcess.call(SagaProcess.processInit, process))
     }
   }
 }
 
-const processName = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
+function* runProcess(process) {
+  if ( ! props.compiled ) { 
+    console.warn('Did not connect to reducers before calling runProcesses, building the process now')
+    buildProcess(process)
+  }
+  const { config = {} } = process
+  const SagaProcess = new process(config)
+  yield spawn(SagaProcess.call(SagaProcess.__utils.init, process))
+}
 
 const buildProcesses = (categories) => {
   if ( typeof categories !== 'object' ) { throw new Error('buildProcesses expects an object') }
@@ -32,7 +43,7 @@ const buildProcesses = (categories) => {
   }
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
-    if ( ! typeof category == 'object' ) { continue }
+    if ( typeof category !== 'object' ) { continue }
     if ( processName(category) === 'redux-saga-process-class' ) {
       const compiled = buildProcess(process)
       parseCompiledProcess(compiled, processes)
@@ -64,6 +75,7 @@ const buildProcesses = (categories) => {
       )
     } else { throw new Error('Failed to Build Reducer: ', reducerName, processes.reducers) }
   }
+  props.compiled = true
   return {
     reducerNames:  Object.keys(processes.reducers),
     reducer:       combineReducers(processes.reducers),
@@ -279,4 +291,4 @@ const parseCompiledProcess = (compiled, processes) => {
 
 
 
-export { buildProcesses, processName }
+export { runProcesses, runProcess, buildProcesses, processName }
