@@ -87,6 +87,10 @@ class MyProcess extends Process {
 
   static cancelTypes = [];
 
+  static actions = {
+    processRequest: [ 'username', 'password' ]
+  };
+  
   static actionRoutes = {
     [TRIGGER_ACTION]: 'onTrigger'
   };
@@ -107,6 +111,7 @@ class MyProcess extends Process {
     const foo = yield* this.select('foo'), // value2 ( state.test.another )
           bar = yield* this.select('bar')  // value of state.reducer.foo
     yield put({ type: STARTED, foo, bar })
+
   }
 
   * shouldProcessCancel(action) {}

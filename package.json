@@ -1,8 +1,8 @@
 {
   "name": "redux-saga-process",
-  "version": "0.0.2",
+  "version": "0.1.7",
   "description": "Processes for Redux-Saga",
-  "main": "dist/main.js",
+  "main": "dist/redux-saga-process.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --require co-mocha",
     "prepublish": "npm run build",
@@ -13,12 +13,11 @@
     "url": "git+https://github.com/Dash-OS/redux-saga-process.git"
   },
   "files": [
-    "bin",
-    "build",
     "src",
-    "test",
-    ".babelrc",
-    "webpack.config.js"
+    "dist",
+    "webpack.config.js",
+    "README.md",
+    "LICENSE"
   ],
   "directories": {
     "lib": "src/lib"
@@ -34,7 +33,10 @@
     "react",
     "generators",
     "yield",
-    "class"
+    "class",
+    "observer",
+    "reselect",
+    "async"
   ],
   "author": "Braden R. Napier <brady.napier@dashos.net> (https://www.dashos.net)",
   "license": "MIT",
@@ -56,7 +58,6 @@
   },
   "dependencies": {
     "redux-saga": "^0.14.2",
-    "reduxsauce": "^0.4.1",
     "reselect": "^2.5.4"
   }
 }

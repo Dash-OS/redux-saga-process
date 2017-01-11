@@ -1,22 +1,22 @@
 import { spawn, fork } from 'redux-saga/effects'
 import { createActions } from './createActions'
 import { createSelector } from 'reselect'
-import { combineReducers } from 'redux'
 
 const props = { compiled: false, mergeReducers: true }
 
-const processName = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
+const processName  = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
+const isObjLiteral = o => ( o !== null && ! Array.isArray(o) && typeof o !== 'function' && typeof o === 'object' )
 
 function* runProcesses(categories) {
   for ( const categoryID in categories ) {
     const category = categories[categoryID]
     if ( typeof category !== 'object' ) { continue }
-    if ( processName(category) === 'redux-saga-process-class' ) {
+    if ( processName(category) === 'Process' ) {
       yield fork(runProcess, category)
     } else {
       for ( const processID in category ) {
         const process = category[processID]
-        if ( processName(process) === 'redux-saga-process-class' ) {
+        if ( processName(process) === 'Process' ) {
           yield fork(runProcess, process)
         } else { continue }
       }
@@ -31,11 +31,11 @@ function* runProcess(process) {
   }
   const { config = {} } = process
   const SagaProcess = new process(config)
-  yield spawn(SagaProcess.call(SagaProcess.__utils.init, process))
+  yield spawn(SagaProcess.__utils.init, process)
 }
 
 const buildProcesses = (categories) => {
-  if ( typeof categories !== 'object' ) { throw new Error('buildProcesses expects an object') }
+  if ( ! isObjLiteral(categories) ) { throw new Error('buildProcesses expects an object') }
   const processes = {
     reducers: {},
     initialState: {},
@@ -44,13 +44,13 @@ const buildProcesses = (categories) => {
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
     if ( typeof category !== 'object' ) { continue }
-    if ( processName(category) === 'redux-saga-process-class' ) {
+    if ( processName(category) === 'Process' ) {
       const compiled = buildProcess(process)
       parseCompiledProcess(compiled, processes)
     } else {
       for ( const processID in category ) {
         const process = category[processID]
-        if ( processName(process) === 'redux-saga-process-class' ) {
+        if ( processName(process) === 'Process' ) {
           const compiled = buildProcess(process)
           parseCompiledProcess(compiled, processes)
         }
@@ -77,9 +77,9 @@ const buildProcesses = (categories) => {
   }
   props.compiled = true
   return {
-    reducerNames:  Object.keys(processes.reducers),
-    reducer:       combineReducers(processes.reducers),
-    initialStates: processes.initialState
+    reducerNames:    Object.keys(processes.reducers),
+    processReducers: processes.reducers,
+    initialStates:   processes.initialState
   }
 }
 
@@ -140,7 +140,7 @@ const mutateProcess = (process, compiled) => {
   if ( compiled.types )     { process.types     = compiled.types     }
 }
 
-const isObjLiteral = o => ( o !== null && ! Array.isArray(o) && typeof o !== 'function' && typeof o === 'object' )
+
 
 /*
   Creates a function which is initialized with the following values:
@@ -201,94 +201,5 @@ const parseCompiledProcess = (compiled, processes) => {
     }
   }
 }
-
-
-// const generateActionFilterReducer =
-//   ( initialState, reducer, rules, pcontext ) => ( state = initialState, action, context ) =>
-//   ( Object.keys(rules).map(rule => {
-    
-//   }))
-//   generateActionFilterReducer(
-//     { value: 0 },
-//     generateArrayMapReducer(
-//       { value: 0 }, 
-//       [
-//         (s, a, c) => ({ ...s, status: 'Over Twenty' })
-//       ]
-//     ),
-//     [
-//       [ 
-//         { key: 'type', op: 'match', options: { nocase: true } }, 
-//         [ 'REQUEST*', '*FAILURE' ]
-//       ],
-//       [ 
-//         { key: 'myKey' }, 
-//         [ 'exists', 'number', (s, a, c) => s.myKey >= 20 ] 
-//       ],
-//       [ 'anotherKey', 'exists' ]
-//     ]
-//   ),
-  
-// const reducerContext = { 
-//   myKey:      { default: 'value' }, 
-//   anotherKey: { default: 'another-value' },
-//   foo:        { default: 'foo-default' }
-// }
-
-// const exampleReducersArray = [
-//   (state, action, context) => (
-//     action.type !== 'MY_TYPE'
-//       ? state : {
-//         ...state,
-//         myKey: action.value || context.myKey.default
-//       }
-//   ),
-//   generateObjectMapReducer(
-//     // initialState
-//     { value: 0 },
-//     // Object-Map Reducer
-//     {
-//       'MY_TYPE': (state, action, context) => ({
-//         ...state,
-//         anotherKey: action.value || context.anotherKey.default
-//       }),
-//       'ANOTHER_TYPE': (state, action, context) => (
-//         ! action.value && state || 
-//         action.value > 20 
-//           ? { ...state, status: 'Over Twenty'  }  : 
-//             { ...state, status: 'Under Twenty' }
-//       )
-//     },
-//     // Parent / generator Context
-//     reducerContext
-//   ),
-//   generateArrayMapReducer(
-//     { value: 0 },
-//     [
-//       (state, { type, ...action}, context) => {
-//         switch(type) {
-//           case 'FOO':
-//             return {
-//               ...state,
-//               foo: context.tryHandler && action.handler 
-//                 ? action.handler(state, { type, ...state }, context) :
-//                   action.value
-//             }
-//           case 'BAR':
-//             return {
-//               ...state,
-//               bar: context.disableBar
-//                 ? null :
-//                   action.value
-//             }
-//           default: return state
-//         }
-//       }
-//     ],
-//     { tryHandler: true, disableBar: true }
-//   )
-// ]
-
-
 
 export { runProcesses, runProcess, buildProcesses, processName }

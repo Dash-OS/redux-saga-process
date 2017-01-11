@@ -45,7 +45,8 @@ module.exports = {
         ],
         exclude: /node_modules/,
         options: {
-          presets: [["es2015", { "modules": false }]]
+          presets: [["es2015", { "modules": false }]],
+          plugins: ['transform-runtime', 'transform-class-properties']
         }
       }
     ]
@@ -64,16 +65,16 @@ module.exports = {
       amd: 'redux-saga',
       root: '_'
     },
-    'reduxsauce': {
-      commonjs: 'reduxsauce',
-      commonjs2: 'reduxsauce',
-      amd: 'reduxsauce',
-      root: '_'
-    },
     'reselect': {
       commonjs: 'reselect',
       commonjs2: 'reselect',
       amd: 'reselect',
+      root: '_'
+    },
+    'redux': {
+      commonjs: 'redux',
+      commonjs2: 'redux',
+      amd: 'redux',
       root: '_'
     }
   }

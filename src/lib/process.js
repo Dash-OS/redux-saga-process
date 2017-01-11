@@ -10,8 +10,6 @@ function cancellablePromise(p, onCancel) {
 
 class Process {
   
-  name = 'saga-redux-process-class'
-  
   constructor(config, State) {
     this.config = config
     this.state  = State
@@ -28,19 +26,20 @@ class Process {
     
     this.observable.create = this.observable.create.bind(this)
     
-    this.select = this.select.bind(this)
+    this.select   = this.select.bind(this)
+    this.dispatch = this.dispatch.bind(this)
   }
   
   __utils = {
+    refs: {},
     * init(target) {
-      const { name } = target
+      this.name = this.name || target.name || 'ANONYMOUS_SAGA_PROCESS'
       const staticsTask = yield fork([ this, this.__utils.checkStatics ], target)
       let startTask
       if (typeof this.processStarts === 'function') {
         startTask = yield fork([this, this.processStarts])
       }
       this.task.classTasks.push(staticsTask, startTask)
-      yield put({ type: '@@PROCESS_STARTED', name })
     },
     getPattern(_types) {
       const patterns = []
@@ -90,12 +89,21 @@ class Process {
         Checks the static properties that we have received
     */
     * checkStatics(target) {
-      const { actionRoutes, selectors, cancelTypes, name } = target
+      const {
+        actions,
+        types,
+        actionRoutes, 
+        selectors, 
+        cancelTypes, 
+        name
+      } = target
   
       const monitorPattern = this.__utils.getPattern(actionRoutes),
             cancelPattern  = this.__utils.getPattern(cancelTypes)
       
       this.__utils.selectors = selectors
+      this.__utils.actions   = actions
+      if ( types ) { this.types = types }
       
       try {
         let stopCheck
@@ -240,6 +248,18 @@ class Process {
         results.push( yield apply(this, this.select, [ selected ]) )
       }
     }
+  }
+  
+  * dispatch(action, ...args) {
+    if (
+      typeof action === 'string' &&
+      this.__utils.actions &&
+      Object.keys(this.__utils.actions).includes(action)
+    ) {
+      yield put(this.__utils.actions[action](...args))
+    } else if ( action && action.type ) {
+      yield put(action)
+    } else { throw new Error('Must dispatch either a registered action or a valid redux action object.') }
   }
 
 }
