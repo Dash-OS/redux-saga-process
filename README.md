@@ -4,7 +4,7 @@ Redux Saga Processe (RSP) introduces an opinionated pattern for building modular
 
 ##### Package Dependencies
 - [redux](https://github.com/reactjs/redux)
-- [redux-saga](https://github.com/redux-saga/redux-saga)
+- [redux-saga](https://github.com/redux-saga/redux-saga) 
 - [reselect](https://github.com/reactjs/reselect)
 
 ## Install
@@ -112,15 +112,20 @@ import Process from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
 
+### Process Properties
+
 Our classes can be configured using [static properties](http://exploringjs.com/es6/ch_classes.html).  In our example 
 we are using the babel [transform-class-properties](https://babeljs.io/docs/plugins/transform-class-properties/) plugin.
+
+All of the properties below are optional.
 
 #### static ```config```
 
 ```javascript
 class MyProcess extends Process {
   static config = {
-    /* Process Configuration */
+    /* Process Configuration Example */
+    reduces: 'myState'
   }; // don't forget to add the semi-colon!
 }
 ```
@@ -131,10 +136,117 @@ the properties that can be provided within this property.
 
 
 | Property        | Type(s)           | Description  |
-| -------------   |:-------------:| -----:|
-| **reduces**         | string | a string indicating the name of the reducer this process should reduce. |
+| -------------   |:-------------:| ----- |
+| **reduces**         | string | a string indicating the name of the [reducer](http://redux.js.org/docs/basics/Reducers.html) this process should reduce.  <br /> <blockquote> ***Note:*** If this property is not defined a reducer will not be generated. </blockquote> |
+
+> ##### Overlapping Reducer Names / Reducer Merge
+> 
+> There are times that we needed multiple processes to reduce against the same key within our 
+> state.  If you define multiple processes that reduce the same state we will merge them into 
+> a single reducer and also attempt to merge and ```initialState``` that is provided.
+>
+> This is done internally by building a reducer which reduces an array of reducers while passing 
+> and merging initialState and any reduction filters we have specified.
+> 
+> It is probably inadvisable to do this as it can cause conflicts.  It is generally a better 
+> idea to have each process reduce its own key within your state.
+
+#### static ```initialState```
+
+```javascript
+class MyProcess extends Process {
+  static config = {
+    reduces: 'myState'
+  }; 
+  
+  static initialState = {
+    /* Initial 'myState' Reducer State */
+    myKey: 'myValue'
+  };
+}
+```
+
+When we are adding a reducer we may want to define an initialState that the 
+store should use.  This is done by providing the initialState property as 
+shown above.  When your reducer is built we will pass the initialState as the 
+state on your first reduction. 
+
+> ***Note:*** We also return the compiled initialState of all your processes as a result of 
+> the ```buildProcesses``` call.
+
+#### static ```reducer```
+
+```javascript
+import { MY_TYPE } from '../constants'
+
+class MyProcess extends Process {
+  static config = {
+    reduces: 'myState'
+  }; 
+  
+  static initialState = {
+    /* Initial 'myState' Reducer State */
+    myKey: 'myValue'
+  };
+  
+  static reducer = {
+    [MY_TYPE]: (state, action) => ({
+      ...state,
+      myKey: action.value
+    })
+  };
+}
+```
+
+We use higher-order-reducers to build special reducers that are used to filter the appropriate 
+actions into your processes reducers.  Your reducer property can be either a ```Reducer Function``` which 
+itself is a reducer, an ```Object Literal``` (as shown above) which maps specific types into a reducer function, or 
+an ```Array``` where each element itself is a reducer.
+
+Our higher-order-reducers will automatically return an unmodified state.  This can help to reduce 
+boilerplate in your code. 
+
+Here is an example of a reducer format that matches the style shown in the ```redux``` documentation:
+
+```javascript
+static reducer = function(state, action) {
+  switch(action.type) {
+    case MY_TYPE:
+      return {
+        ...state,
+        myKey: action.value
+      }
+    default:
+      return state
+  }
+}
+```
+
+> ***Note:*** Reducers should be pure.  You can not access ```this``` within them. Instead 
+> you should pass any desired properties within a dispatched action.
+
+<details>
+  <summary><b>An Example of a Higher-Order-Reducer Generator (Click to Expand)</b></summary><p>
+<br />
+This is not strictly important to see or understand, but for those of you that are interested 
+in how we are building the reducers below is an example of the object filter reducer we showed 
+in the first example.
+
+```javascript
+const objectMapReducerGenerator = 
+  (initialState, handlers = {}) => 
+    (state = initialState, action) => 
+      (
+        ! action || ! action.type || ! handlers[action.type] && state || 
+        handlers[action.type](state, action)
+      )
+```
+</p></details>
+
 
 ### Monitor Dispatch, Trigger Actions
+
+
 
 ```javascript
 import { put } from 'redux-saga/effects'
@@ -230,3 +342,5 @@ export default MyProcess
 ### Special Thanks & Inspirations
 
 - [reduxsauce](https://github.com/skellock/reduxsauce) - Originally we used reduxsauce to handle some of the handling of data.  Many parts of this package are heavily inspired by the great work done by [@skellock](https://github.com/skellock) with reduxsauce!
+- @gaearon - Because it's the cool thing to do to thank him and obviously because of his endless contributions to the community.
+- @yelouafi / @redux-saga - For bringing us redux-saga's and for indirectly inspiring the process concept while assisting us with questions.

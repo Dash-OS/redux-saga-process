@@ -1,6 +1,7 @@
 import { spawn, fork } from 'redux-saga/effects'
 import { createActions } from './createActions'
 import { createSelector } from 'reselect'
+import * as generate from './reducerGenerator'
 
 const props = { compiled: false, mergeReducers: true }
 
@@ -62,13 +63,19 @@ const buildProcesses = (categories) => {
     if ( typeof reducer === 'function' ) {
       continue
     } else if ( Array.isArray(reducer) ) {
-      processes.reducers[reducerName] = generateArrayMapReducer(
+      processes.reducers[reducerName] = generate.arrayMapReducer(
         processes.initialState[reducerName],
-        reducer.map(r => generateObjectMapReducer(undefined, r, undefined)),
+        reducer.map(r => generate.objectMapReducer(undefined, r, undefined)),
         processes.context[reducerName]
       )
     } else if ( isObjLiteral(reducer) ) {
-      processes.reducers[reducerName] = generateObjectMapReducer(
+      processes.reducers[reducerName] = generate.objectMapReducer(
+        processes.initialState[reducerName],
+        reducer,
+        processes.context[reducerName]
+      )
+    } else if ( typeof reducer === 'function' ) {
+      processes.reducers[reducerName] = generate.reducerReducer(
         processes.initialState[reducerName],
         reducer,
         processes.context[reducerName]
@@ -139,34 +146,6 @@ const mutateProcess = (process, compiled) => {
   if ( compiled.selectors ) { process.selectors = compiled.selectors }
   if ( compiled.types )     { process.types     = compiled.types     }
 }
-
-
-
-/*
-  Creates a function which is initialized with the following values:
-    initialState - The initial state that should be used if the value of state
-                   is falsey.
-    reducers     - An array of functions that will be called with the received
-                   values for each.  Expects the response to be a new and optionally 
-                   modified state (no mutations).
-    
-    The resulting function provides a redux-compatible reducer.  Redux can call it like
-    any other reducer and they will get the result of reducing the reducer.  Optionally 
-    pass in a context value which will be merged with the context at creation time and
-    be passed to all children.
-    
-    
-*/
-const generateArrayMapReducer = 
-  ( initialState, reducers, pcontext ) =>  ( state = initialState, action, context ) =>
-  ( reducers.reduce( (p, c)  => c(p, action, { ...pcontext, ...context }), state ) )
-
-const generateObjectMapReducer = 
-  (initialState, handlers = {}, pcontext) => (state = initialState, action, context) => 
-  {
-    if ( ! action || ! action.type || ! handlers[action.type] ) return state
-    return handlers[action.type](state, action, { ...pcontext, ...context })
-  }
   
 const mergeReducers = (compiled, processes) => {
   const name = compiled.reducer.name
