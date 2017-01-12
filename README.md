@@ -341,7 +341,8 @@ class MyProcess extends Process {
   
   static selectors = {
     myKey: [ myState => myState.myKey ],
-    foo:   [ s => s, s => s.anotherState.foo ]
+    foo:   [ s => s, s => s.anotherState.foo ],
+    foo2:  [ s => s.anotherState, anotherState => anotherState.foo ] // identical to above
   };
   
   * processStarts() {
@@ -351,6 +352,14 @@ class MyProcess extends Process {
   }
 }
 ```
+
+Currently powered by the [reselect](https://github.com/reactjs/reselect) library (although we may 
+remove this dependency if requested), selectors allow us to capture the state of our Application 
+within our processes.  While it is generally a best practice to handle state within the process for 
+most things (example: ```this.state```), it can be helpful to capture our state. 
+
+Under-the-hood this.select is simply calling redux-sagas [yield select(selector)](https://redux-saga.github.io/redux-saga/docs/api/index.html#selectselector-args) 
+and feeding it a [reselect selector](https://github.com/reactjs/reselect#createselectorinputselectors--inputselectors-resultfunc)
 
 ***
 

@@ -1,7 +1,7 @@
 import { spawn, fork } from 'redux-saga/effects'
 import { createActions } from './createActions'
 import { createSelector } from 'reselect'
-import * as generate from './reducerGenerator'
+import * as generate from './reducerGenerators'
 
 const props = { compiled: false, mergeReducers: true }
 

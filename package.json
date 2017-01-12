@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-process",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "Processes for Redux-Saga",
   "main": "dist/redux-saga-process.js",
   "scripts": {
@@ -26,16 +26,19 @@
     "url": "https://github.com/Dash-OS/redux-saga-process/issues"
   },
   "keywords": [
+    "react",
+    "react-native",
     "redux",
     "saga",
     "redux-saga",
     "process",
-    "react",
+    "daemon",
     "generators",
     "yield",
     "class",
     "observer",
     "reselect",
+    "selectors",
     "async"
   ],
   "author": "Braden R. Napier <brady.napier@dashos.net> (https://www.dashos.net)",

@@ -230,24 +230,27 @@ class Process {
   };
 
   * select(selector) {
+    let results
     if ( 
       typeof selector === 'string' && 
       this.__utils.selectors &&
       Object.keys(this.__utils.selectors).includes(selector)
     ) {
       return yield select(this.__utils.selectors[selector])
-    } else if (
-      typeof selector === 'function'
-    ) {
+    } else if ( typeof selector === 'function' ) {
       return yield select(selector)
-    } else if ( 
-      Array.isArray(selector)
-    ) {
-      const results = []
+    } else if ( Array.isArray(selector) ) {
+      results = []
       for ( let selected of selector ) {
         results.push( yield apply(this, this.select, [ selected ]) )
       }
+    } else if (
+      typeof selector === 'string' &&
+      this.config && this.config.reduces
+    ) {
+      return yield select(state => state[this.config.reduces][selector])
     }
+    return results
   }
   
   * dispatch(action, ...args) {
