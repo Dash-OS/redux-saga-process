@@ -51,6 +51,7 @@ import Process from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
 
+***
 #### Building your Processes
 
 Before we [create our Redux Store](http://redux.js.org/docs/basics/Store.html#store) we should start 
@@ -81,13 +82,11 @@ const rootReducer = combineReducers({
   ...processes.processReducers,
 })
 ```
-
+***
 #### Running your Processes
 
 Now that we have built our processes we need to run them.  This is done from within your 
 [root redux-saga](https://redux-saga.github.io/redux-saga/docs/introduction/BeginnerTutorial.html). 
-
-
 
 ```javascript
 import { fork } from 'redux-saga/effects'
@@ -117,14 +116,14 @@ As shown above we start by building an ES6 class which extends ```Process```:
 import Process from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
-
+***
 ## Process Properties
 
 Our classes can be configured using [static properties](http://exploringjs.com/es6/ch_classes.html).  In our example 
 we are using the babel [transform-class-properties](https://babeljs.io/docs/plugins/transform-class-properties/) plugin.
 
 > ***Note:*** All of the properties are completely optional.
-
+***
 ### static ```config```
 
 ```javascript
@@ -156,7 +155,7 @@ the properties that can be provided within this property.
 > 
 > It is probably inadvisable to do this as it can cause conflicts.  It is generally a better 
 > idea to have each process reduce its own key within your state.
-
+***
 ### static ```initialState```
 
 ```javascript
@@ -179,7 +178,7 @@ state on your first reduction.
 
 > ***Tip:*** We also return the compiled initialState of all your processes as a result of 
 > the ```buildProcesses``` call.
-
+***
 ### static ```reducer```
 
 ```javascript
@@ -252,7 +251,7 @@ const objectMapReducerGenerator =
       )
 ```
 </p></details>
-
+***
 ### static ```actionRoutes```
 
 ```javascript
@@ -276,6 +275,7 @@ Action Routes allow us to define types that we are interested in handling as a
 side-effect and maps it to a method within your process.  If your method is a 
 generator you can use any of the redux-saga API via yield within the method.
 
+***
 ### static ```actionCreators```
 
 ```javascript
@@ -310,6 +310,7 @@ class MyProcess extends Process {
 }
 ```
 
+***
 ### static ```selectors```
 
 ```javascript
@@ -336,6 +337,8 @@ class MyProcess extends Process {
 }
 ```
 
+***
+
 ### static ```cancelTypes```
 ```javascript
 import { put } from 'redux-saga/effects'
@@ -357,7 +360,7 @@ class MyProcess extends Process {
     }
   }
   
-  * processCancelled(action) {
+  * processCancels(action) {
     /* Conduct Cleanup */
   }
   
@@ -368,6 +371,8 @@ class MyProcess extends Process {
   
 }
 ```
+
+***
 
 ### Special Thanks & Inspirations
 
