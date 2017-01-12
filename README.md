@@ -32,12 +32,17 @@ We do a few powerful things under-the-hood such as building and merging like-red
 routing your dispatches intelligently, generating action creators, routing actions into 
 your processes, and more.  See the overview and examples below to see how it all looks.
 
-We have just packaged it up for public-use so it is possible there will be some rough 
-edges, but it has passed all our tests thus far!  Feel free to contribute or report any 
-issues you run into while using the package!  Would love to hear your ideas and thoughts.
-
 When I have the time I will try to add a gitbook for the documentation.  For now I will attempt
 to document everything you need to know here.
+
+> **Note:** This package should be considered a work-in-progress and should be tested thoroughly 
+> at this point before using in your projects.  We just decoupled the whole package from our 
+> app(s) so some bugs may remain that need to be ironed out (although we haven't run into any with our 
+> tests at this time).
+
+***
+#### Thoughts, Comments, Quesstions, Pull Requests welcome!
+***
 
 #### Creating a Saga Redux Process
 
@@ -366,6 +371,6 @@ class MyProcess extends Process {
 
 ### Special Thanks & Inspirations
 
-- Dan Abramov [@gaearon](https://github.com/gaearon) - Because it's the cool thing to do to thank him and obviously because of his endless contributions to the community.
-- Yassine Elouafi [@yelouafi](https://github.com/yelouafi) / [@redux-saga](https://github.com/redux-saga) - For bringing us redux-saga's and for indirectly inspiring the process concept while assisting us with questions.
-- [reduxsauce](https://github.com/skellock/reduxsauce) - Originally we used reduxsauce to handle some of the handling of data.  Many parts of this package are heavily inspired by the great work done by [@skellock](https://github.com/skellock) with reduxsauce!
+- **Dan Abramov [@gaearon](https://github.com/gaearon)** - Because it's the cool thing to do to thank him and obviously because of his endless contributions to the community including [redux](https://github.com/reactjs/redux) which is what this package is based upon (obviously).
+- **Yassine Elouafi [@yelouafi](https://github.com/yelouafi) / [@redux-saga](https://github.com/redux-saga)** - For bringing us [redux-sagas](https://github.com/redux-saga/redux-saga) and for indirectly inspiring the process concept while assisting us with questions.
+- **Steve Kellock [@skellock](https://github.com/skellock)** - [reduxsauce](https://github.com/skellock/reduxsauce) - Originally we used reduxsauce to handle some of the handling of data.  Many parts of this package are heavily inspired by the great package they have provided!
