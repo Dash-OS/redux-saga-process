@@ -1,8 +1,9 @@
 # Redux Saga Process 
 Redux Saga Processe (RSP) introduces an opinionated pattern for building modular, clean, and powerful 
-[redux-saga's](https://github.com/redux-saga/redux-saga) by running them within ES6 classes and providing them with an encapsulated API.  
+[redux-saga's](https://github.com/redux-saga/redux-saga) by running them within ES6 classes and providing 
+them with an encapsulated, simple, and powerful API.  
 
-##### Package Dependencies
+#### Package Dependencies
 - [redux](https://github.com/reactjs/redux)
 - [redux-saga](https://github.com/redux-saga/redux-saga) 
 - [reselect](https://github.com/reactjs/reselect)
