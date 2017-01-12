@@ -1,4 +1,5 @@
 const toReduxType = str => str.replace(/(?!^)([A-Z])/g, '_$1').toUpperCase()
+const isObjLiteral = o => ( o !== null && ! Array.isArray(o) && typeof o !== 'function' && typeof o === 'object' )
 
 const buildTypes = types => {
   const compiled = {}
@@ -14,9 +15,13 @@ const buildCreator = (type, keys) => (...args) => {
   var i = 0, compiled = { type }
   if ( Array.isArray(keys) ) {
     for ( const key of keys ) { compiled[key] = args[i++] }
+    if (args.length > keys.length && isObjLiteral(args[i + 1]))
+      compiled = { ...compiled, ...args[i + 1] }
   } else if ( typeof keys === 'function' ) {
     compiled = { ...compiled, ...keys(...args) }
-  } else { compiled = { ...compiled, ...keys } }
+  } else if ( isObjLiteral(keys) ) { 
+    compiled = { ...compiled, ...keys, ...(isObjLiteral(args[0]) && args[0]) } 
+  } else { throw new Error('Dont know how to handle action: ', type, keys, args) }
   return compiled
 }
 

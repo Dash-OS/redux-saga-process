@@ -3,9 +3,9 @@ Redux Saga Processe (RSP) introduces an opinionated pattern for building modular
 [redux-saga's](https://github.com/redux-saga/redux-saga) by running them within ES6 classes and providing 
 them with an encapsulated, simple, and powerful API.  
 
-#### Package Dependencies
+### Package Dependencies
 - [redux](https://github.com/reactjs/redux)
-- [redux-saga](https://github.com/redux-saga/redux-saga) 
+- [redux-saga](https://github.com/redux-saga/redux-saga)
 - [reselect](https://github.com/reactjs/reselect)
 
 # Installation
@@ -39,7 +39,7 @@ issues you run into while using the package!  Would love to hear your ideas and 
 When I have the time I will try to add a gitbook for the documentation.  For now I will attempt
 to document everything you need to know here.
 
-#### Building a Redux Saga Process Class
+#### Creating a Saga Redux Process
 
 ```javascript
 import Process from 'redux-saga-process'
@@ -118,7 +118,7 @@ class MyProcess extends Process { /* ... */ }
 Our classes can be configured using [static properties](http://exploringjs.com/es6/ch_classes.html).  In our example 
 we are using the babel [transform-class-properties](https://babeljs.io/docs/plugins/transform-class-properties/) plugin.
 
-All of the properties below are optional.
+> ***Note:*** All of the properties are completely optional.
 
 ### static ```config```
 
@@ -172,7 +172,7 @@ store should use.  This is done by providing the initialState property as
 shown above.  When your reducer is built we will pass the initialState as the 
 state on your first reduction. 
 
-> ***Note:*** We also return the compiled initialState of all your processes as a result of 
+> ***Tip:*** We also return the compiled initialState of all your processes as a result of 
 > the ```buildProcesses``` call.
 
 ### static ```reducer```
@@ -204,11 +204,8 @@ actions into your processes reducers.  Your reducer property can be either a ```
 itself is a reducer, an ```Object Literal``` (as shown above) which maps specific types into a reducer function, or 
 an ```Array``` where each element itself is a reducer.
 
-Our higher-order-reducers will automatically return an unmodified state.  This can help to reduce 
-boilerplate in your code. 
-
-
-
+> ***Note:*** Our higher-order-reducers will automatically return an unmodified state if no types match your specified 
+> handlers.
 
 > ***Note:*** Reducers should be pure.  You can not access ```this``` within them. Instead 
 > you should pass any desired properties within a dispatched action.
@@ -229,7 +226,7 @@ static reducer = function(state, action) {
     default:
       return state
   }
-}
+};
 ```
 </p></details>
 
@@ -251,104 +248,124 @@ const objectMapReducerGenerator =
 ```
 </p></details>
 
-
-### Monitor Dispatch, Trigger Actions
-
-
+### static ```actionRoutes```
 
 ```javascript
 import { put } from 'redux-saga/effects'
-
-import Process from 'redux-saga-process'
-
-const TRIGGER_ACTION_ONE = 'TRIGGER_ACTION_ONE',
-      TRIGGER_ACTION_TWO = 'TRIGGER_ACTION_TWO'
+import { MY_TYPE, RECEIVED_ACTION } from '../constants'
 
 class MyProcess extends Process {
-
+  
   static actionRoutes = {
-    [TRIGGER_ACTION_ONE]: 'onTriggerOne',
-    [TRIGGER_ACTION_TWO]: 'onTriggerTwo'
+    [MY_TYPE]: 'myMethod'  
   };
-
-  * onTriggerOne({ type, ...props }) {
-    const { type, ...props } = action
-    /* fun stuff */
+  
+  * myMethod(action) {
+    yield put({ type: RECEIVED_ACTION })
   }
   
-  * onTriggerTwo(action) { /* fun stuff */ }
-  
 }
-
-export default MyProcess
 ```
 
-### Larger Example
+Action Routes allow us to define types that we are interested in handling as a 
+side-effect and maps it to a method within your process.  If your method is a 
+generator you can use any of the redux-saga API via yield within the method.
 
-```js
-import { put } from 'redux-saga/effects'
+### static ```actionCreators```
 
-import Process from 'redux-saga-process'
-
-const STARTED        = 'STARTED' 
-      SET_STATE      = 'SET_STATE',
-      TRIGGER_ACTION = 'TRIGGER_ACTION'
-
+```javascript
 class MyProcess extends Process {
+  
+  static actionCreators = {
+    trigger: [ 'action' ],
+    myType:  [ 'username', 'password' ],
+    fooType: { staticKey: 'staticValue' },
+    fnType:  (value, props, obj) => ({ value, props, ...obj })
+  };
+  
+  * processStarts() {
+  
+    yield* this.dispatch('trigger', 'this')
+      // dispatches action to reducers ->
+      //  { type: 'TRIGGER', action: 'this' }
+      
+    yield* this.dispatch('myType', 'myUsername', 'myPassword', { mergedKey: 'value' } )
+      // dispatches action to reducers ->
+      //  { type: 'MY_TYPE', username: 'myUsername', password: 'myPassword', mergedKey: 'value' }\
+      
+    yield* this.dispatch('fooType', { mergedKey: 'value' })
+      // dispatches action to reducers ->
+      //  { type: 'FOO_TYPE', staticKey: 'staticValue', mergedKey: 'value' }
+      
+    yield* this.dispatch('fnType', 'foo', 'bar', { mergedKey: 'value' })
+      // dispatches action to reducers ->
+      //  { type: 'FN_TYPE', value: 'foo', props: 'bar', mergedKey: 'value' }
+      
+  }
+}
+```
 
+### static ```selectors```
+
+```javascript
+class MyProcess extends Process {
   static config = {
-    reduces: 'test'
+    reduces: 'myState'
+  }; 
+  
+  static initialState = {
+    /* Initial 'myState' Reducer State */
+    myKey: 'myValue'
   };
   
   static selectors = {
-    foo: [ test => test.another ],
-    bar: [ s => s, s => s.reducer.foo ]
-  };
-
-  static initialState = {
-    key:     'value',
-    another: 'value2'
-  };
-
-  static cancelTypes = [];
-
-  static actions = {
-    processRequest: [ 'username', 'password' ]
+    myKey: [ myState => myState.myKey ],
+    foo:   [ s => s, s => s.anotherState.foo ]
   };
   
-  static actionRoutes = {
-    [TRIGGER_ACTION]: 'onTrigger'
-  };
-
-  static reducer = {
-    [SET_STATE]: (state, action) => ({
-      ...state,
-      modified: action.value || 'no-value'
-    })
-  };
-
-  * onTrigger(action) {
-    const { type, value } = action
-    yield put({ type: SET_STATE, value})
-  }
-
   * processStarts() {
-    const foo = yield* this.select('foo'), // value2 ( state.test.another )
-          bar = yield* this.select('bar')  // value of state.reducer.foo
-    yield put({ type: STARTED, foo, bar })
-
+    const myKey  = yield* this.select('myKey') // myValue
+    const foo    = yield* this.select('foo')     // value of foo in anotherState key
+    const custom = yield* this.select(state => state.anotherState.foo) // same as above
   }
+}
+```
 
-  * shouldProcessCancel(action) {}
-  * processCancels(action) {}
+### static ```cancelTypes```
+```javascript
+import { put } from 'redux-saga/effects'
+import { CANCEL_PROCESS, USER_LOGOUT } from '../constants'
+
+class MyProcess extends Process {
+  
+  static cancelTypes = [
+    { type: CANCEL_PROCESS },
+    USER_LOGOUT
+  ];
+  
+  * shouldProcessCancel(action) {
+    switch(action.type) {
+      case USER_LOGOUT: return true
+      case CANCEL_PROCESS:
+        if (action.name === this.name) return true
+      default: return false
+    }
+  }
+  
+  * processCancelled(action) {
+    /* Conduct Cleanup */
+  }
+  
+  * processStarts() {
+    /* Cancel Ourself on Process Startup (As Example) */
+    yield put({ type: CANCEL_PROCESS, name: this.name })
+  }
   
 }
-
-export default MyProcess
 ```
 
 ### Special Thanks & Inspirations
 
+- Dan Abramov [@gaearon](https://github.com/gaearon) - Because it's the cool thing to do to thank him and obviously because of his endless contributions to the community.
+- Yassine Elouafi [@yelouafi](https://github.com/yelouafi) / [@redux-saga](https://github.com/redux-saga) - For bringing us redux-saga's and for indirectly inspiring the process concept while assisting us with questions.
 - [reduxsauce](https://github.com/skellock/reduxsauce) - Originally we used reduxsauce to handle some of the handling of data.  Many parts of this package are heavily inspired by the great work done by [@skellock](https://github.com/skellock) with reduxsauce!
-- @gaearon - Because it's the cool thing to do to thank him and obviously because of his endless contributions to the community.
-- @yelouafi / @redux-saga - For bringing us redux-saga's and for indirectly inspiring the process concept while assisting us with questions.

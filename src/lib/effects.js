@@ -133,7 +133,8 @@ const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
 }
 
 const buildActions = (process, compiled = {}) => {
-  const actions = process.actions && createActions(process.actions)
+  const creators = process.actionCreators || process.actions
+  const actions = creators && createActions(creators)
   if ( actions ) { 
     compiled.actions = actions.ACTIONS 
     compiled.types   = { ...compiled.types, ...actions.TYPES }
