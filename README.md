@@ -1,4 +1,7 @@
 # Redux Saga Process 
+
+[![npm version](https://badge.fury.io/js/redux-saga-process.svg)](https://badge.fury.io/js/redux-saga-process)
+
 Redux Saga Processe (RSP) introduces an opinionated pattern for building modular, clean, and powerful 
 [redux-saga's](https://github.com/redux-saga/redux-saga) by running them within ES6 classes and providing 
 them with an encapsulated, simple, and powerful API.  
