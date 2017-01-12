@@ -1,4 +1,4 @@
-# Redux-Saga-Process
+# Redux Saga Process 
 Redux Saga Processe (RSP) introduces an opinionated pattern for building modular, clean, and powerful 
 [redux-saga's](https://github.com/redux-saga/redux-saga) by running them within ES6 classes and providing them with an encapsulated API.  
 
@@ -7,7 +7,7 @@ Redux Saga Processe (RSP) introduces an opinionated pattern for building modular
 - [redux-saga](https://github.com/redux-saga/redux-saga) 
 - [reselect](https://github.com/reactjs/reselect)
 
-## Install
+# Installation
 
 ```bash
 $ yarn add redux-saga-process
@@ -17,7 +17,7 @@ $ yarn add redux-saga-process
 $ npm install --save redux-saga-process
 ```
 
-## Overview
+# Overview
 
 RSP has been inspired by the pattern we have begun using on our various applications 
 to handle the heavy amount of asynchronous and highly dynamic content we handle.  It has 
@@ -99,7 +99,7 @@ export default *
 > method to create an independent frame of execution that should not be affected by your other 
 > sagas and/or processes.  You may optionally call the runProcesses function like you would any other redux-saga.
 
-## Building your Processes
+# Building your Processes
 
 So now that we have seen how to implement the RSP Pattern during startup, lets take a look 
 at what they can actually do for us.  Our goal was to build an extensible & modular lifecycle 
@@ -112,14 +112,14 @@ import Process from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
 
-### Process Properties
+## Process Properties
 
 Our classes can be configured using [static properties](http://exploringjs.com/es6/ch_classes.html).  In our example 
 we are using the babel [transform-class-properties](https://babeljs.io/docs/plugins/transform-class-properties/) plugin.
 
 All of the properties below are optional.
 
-#### static ```config```
+### static ```config```
 
 ```javascript
 class MyProcess extends Process {
@@ -151,7 +151,7 @@ the properties that can be provided within this property.
 > It is probably inadvisable to do this as it can cause conflicts.  It is generally a better 
 > idea to have each process reduce its own key within your state.
 
-#### static ```initialState```
+### static ```initialState```
 
 ```javascript
 class MyProcess extends Process {
@@ -174,7 +174,7 @@ state on your first reduction.
 > ***Note:*** We also return the compiled initialState of all your processes as a result of 
 > the ```buildProcesses``` call.
 
-#### static ```reducer```
+### static ```reducer```
 
 ```javascript
 import { MY_TYPE } from '../constants'
@@ -206,6 +206,15 @@ an ```Array``` where each element itself is a reducer.
 Our higher-order-reducers will automatically return an unmodified state.  This can help to reduce 
 boilerplate in your code. 
 
+
+
+
+> ***Note:*** Reducers should be pure.  You can not access ```this``` within them. Instead 
+> you should pass any desired properties within a dispatched action.
+
+<details>
+  <summary><b>An Example of using a Reducer Function (Click to Expand)</b></summary><p>
+<br />
 Here is an example of a reducer format that matches the style shown in the ```redux``` documentation:
 
 ```javascript
@@ -221,9 +230,7 @@ static reducer = function(state, action) {
   }
 }
 ```
-
-> ***Note:*** Reducers should be pure.  You can not access ```this``` within them. Instead 
-> you should pass any desired properties within a dispatched action.
+</p></details>
 
 <details>
   <summary><b>An Example of a Higher-Order-Reducer Generator (Click to Expand)</b></summary><p>
