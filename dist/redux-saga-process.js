@@ -677,7 +677,6 @@ var buildTypes = function buildTypes(types) {
       var type = _step.value;
 
       var snakeCase = toReduxType(type);
-      compiled[snakeCase] = snakeCase;
       compiled[type] = snakeCase;
     }
   } catch (err) {
@@ -1200,7 +1199,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_62__;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.processName = exports.buildProcesses = exports.runProcess = exports.runProcesses = undefined;
+exports.processContext = exports.processName = exports.buildProcesses = exports.runProcess = exports.runProcesses = undefined;
 
 var _extends2 = __webpack_require__(19);
 
@@ -1252,12 +1251,25 @@ var _marked = [runProcesses, runProcess].map(_regenerator2.default.mark);
 
 var props = { compiled: false, mergeReducers: true };
 
+var PROCESS_CONTEXT = {
+  actions: {},
+  types: {},
+  selectors: {}
+};
+
 var processName = function processName(o) {
   return (0, _getPrototypeOf2.default)(o) && (0, _getPrototypeOf2.default)(o).name;
 };
 var isObjLiteral = function isObjLiteral(o) {
   return o !== null && !Array.isArray(o) && typeof o !== 'function' && (typeof o === 'undefined' ? 'undefined' : (0, _typeof3.default)(o)) === 'object';
 };
+
+function processContext(what) {
+  if (!what) {
+    return PROCESS_CONTEXT;
+  }
+  return PROCESS_CONTEXT[what];
+}
 
 function runProcesses(categories) {
   var categoryID, category, processID, process;
@@ -1443,6 +1455,21 @@ function buildProcess(proc) {
     buildSelectors(proc, compiled);
     buildActions(proc, compiled);
     mutateProcess(proc, compiled);
+  } else {
+    /* Already compiled this process, return compiled data */
+    if (proc.reducer) {
+      compiled.reducer = proc.reducer;
+    }
+    if (proc.actions) {
+      compiled.actions = proc.actions;
+    }
+    if (proc.selectors) {
+      compiled.selectors = proc.selectors;
+    }
+    if (proc.types) {
+      compiled.types = proc.types;
+    }
+    compiled.cached = true;
   }
   compiled.initialState = proc.initialState;
   return compiled;
@@ -1511,6 +1538,9 @@ var buildActions = function buildActions(process) {
 };
 
 var mutateProcess = function mutateProcess(process, compiled) {
+  if (compiled.reducer) {
+    process.reducer = compiled.reducer;
+  }
   if (compiled.actions) {
     process.actions = compiled.actions;
   }
@@ -1540,16 +1570,28 @@ var mergeReducers = function mergeReducers(compiled, processes) {
 };
 
 var parseCompiledProcess = function parseCompiledProcess(compiled, processes) {
-  if (compiled.reducer && compiled.reducer.name && compiled.reducer.reducer) {
+  if (compiled.reducer && compiled.reducer.reducer) {
     var name = compiled.reducer.name;
     if (!name) {
       throw new Error('Reducer Does Not Have a Name? ', compiled);
     }
     if (processes.reducers[name]) {
       mergeReducers(compiled, processes);
-    } else if (name) {
+    } else {
       processes.reducers[name] = compiled.reducer.reducer;
       processes.initialState[name] = compiled.initialState || {};
+    }
+  }
+  if (!compiled.cached) {
+    /* If we are returning cached data no need to merge into the global context */
+    if (compiled.actions) {
+      PROCESS_CONTEXT.actions = (0, _extends3.default)({}, PROCESS_CONTEXT.actions, compiled.actions);
+    }
+    if (compiled.types) {
+      PROCESS_CONTEXT.types = (0, _extends3.default)({}, PROCESS_CONTEXT.types, compiled.types);
+    }
+    if (compiled.selectors) {
+      PROCESS_CONTEXT.selectors = (0, _extends3.default)({}, PROCESS_CONTEXT.selectors, compiled.selectors);
     }
   }
 };
@@ -1558,6 +1600,7 @@ exports.runProcesses = runProcesses;
 exports.runProcess = runProcess;
 exports.buildProcesses = buildProcesses;
 exports.processName = processName;
+exports.processContext = processContext;
 
 /***/ },
 /* 64 */
@@ -1986,7 +2029,7 @@ var Process = function () {
               case 4:
                 this.task.roster = (0, _extends5.default)({}, roster, (0, _defineProperty3.default)({}, category, (0, _extends5.default)({}, roster[category], (0, _defineProperty3.default)({}, id, task))));
                 _context4.next = 7;
-                return (0, _effects.fork)([this, this.task.watch], task, category, id, ['task', 'cleanup'], category, id);
+                return (0, _effects.fork)([this, this.task.watch], category, id, ['task', 'cleanup'], category, id);
 
               case 7:
               case 'end':
@@ -1995,136 +2038,159 @@ var Process = function () {
           }
         }, save, this);
       }),
+      task: _regenerator2.default.mark(function task(category, id) {
+        return _regenerator2.default.wrap(function task$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                if (!(!id && this.task.roster[category])) {
+                  _context5.next = 4;
+                  break;
+                }
+
+                return _context5.abrupt('return', this.task.roster[category]);
+
+              case 4:
+                if (!(id && category)) {
+                  _context5.next = 8;
+                  break;
+                }
+
+                return _context5.abrupt('return', this.task.roster[category] && this.task.roster[category][id]);
+
+              case 8:
+                if (!(!id && !category)) {
+                  _context5.next = 10;
+                  break;
+                }
+
+                return _context5.abrupt('return', this.task.roster);
+
+              case 10:
+              case 'end':
+                return _context5.stop();
+            }
+          }
+        }, task, this);
+      }),
 
       /*
         watchTask()
           Register a callback that will be made with the "this" context attached
           and as a redux-saga.  The callback will be made once the given tasks
           promise (task.done) is resolved.  The callback will be made whether the 
-          task was cancelled or not.  The first prop sent to the callback will always 
-          include the status of the task.
+          task was cancelled or not.
       */
-      watch: _regenerator2.default.mark(function watch(task, category, id, callback) {
-        var status,
+      watch: _regenerator2.default.mark(function watch(category, id, callback) {
+        var task,
             _len2,
             props,
             _key2,
             _fn,
-            _args5 = arguments;
+            _args6 = arguments;
 
-        return _regenerator2.default.wrap(function watch$(_context5) {
+        return _regenerator2.default.wrap(function watch$(_context6) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
+                return _context6.delegateYield(this.task.task(category, id), 't0', 1);
+
+              case 1:
+                task = _context6.t0;
+
+                console.log('Task: ', task['@@redux-saga/TASK']);
+
                 if (!(!task || !task.done)) {
-                  _context5.next = 3;
+                  _context6.next = 6;
                   break;
                 }
 
                 console.error('[PROCESS] Task Watcher received an invalid task object: ', task);
-                return _context5.abrupt('return');
-
-              case 3:
-                _context5.prev = 3;
-                _context5.next = 6;
-                return task.done;
+                return _context6.abrupt('return');
 
               case 6:
-                _context5.prev = 6;
-                status = void 0;
-                _context5.next = 10;
-                return (0, _effects.cancelled)();
+                _context6.prev = 6;
+                _context6.next = 9;
+                return task.done;
 
-              case 10:
-                if (!_context5.sent) {
-                  _context5.next = 14;
-                  break;
-                }
+              case 9:
+                _context6.prev = 9;
 
-                // Is extra logic needed for cancellation condition?
-                status = 'cancelled';
-                _context5.next = 15;
-                break;
-
-              case 14:
-                status = 'ok';
-
-              case 15:
                 if (callback) {
-                  _context5.next = 17;
+                  _context6.next = 12;
                   break;
                 }
 
-                return _context5.abrupt('return');
+                return _context6.abrupt('return');
 
-              case 17:
-                for (_len2 = _args5.length, props = Array(_len2 > 4 ? _len2 - 4 : 0), _key2 = 4; _key2 < _len2; _key2++) {
-                  props[_key2 - 4] = _args5[_key2];
+              case 12:
+                for (_len2 = _args6.length, props = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+                  props[_key2 - 3] = _args6[_key2];
                 }
 
                 if (!Array.isArray(callback)) {
-                  _context5.next = 25;
+                  _context6.next = 20;
                   break;
                 }
 
                 _fn = this[callback[0]] && this[callback[0]][callback[1]];
 
                 if (!(typeof _fn === 'function')) {
-                  _context5.next = 23;
+                  _context6.next = 18;
                   break;
                 }
 
-                _context5.next = 23;
-                return (0, _effects.apply)(this, _fn, [status].concat(props));
+                _context6.next = 18;
+                return (0, _effects.apply)(this, _fn, props);
+
+              case 18:
+                _context6.next = 31;
+                break;
+
+              case 20:
+                if (!(typeof this[callback] === 'function')) {
+                  _context6.next = 25;
+                  break;
+                }
+
+                _context6.next = 23;
+                return (0, _effects.apply)(this, this[callback], props);
 
               case 23:
-                _context5.next = 36;
+                _context6.next = 31;
                 break;
 
               case 25:
-                if (!(typeof this[callback] === 'function')) {
-                  _context5.next = 30;
+                if (!(typeof callback === 'function')) {
+                  _context6.next = 30;
                   break;
                 }
 
-                _context5.next = 28;
-                return (0, _effects.apply)(this, this[callback], [status].concat(props));
+                _context6.next = 28;
+                return (0, _effects.apply)(this, callback, props);
 
               case 28:
-                _context5.next = 36;
+                _context6.next = 31;
                 break;
 
               case 30:
-                if (!(typeof callback === 'function')) {
-                  _context5.next = 35;
-                  break;
-                }
-
-                _context5.next = 33;
-                return (0, _effects.apply)(this, callback, [status].concat(props));
-
-              case 33:
-                _context5.next = 36;
-                break;
-
-              case 35:
                 console.error('Function not found: ', callback);
 
-              case 36:
-                return _context5.finish(6);
+              case 31:
+                return _context6.finish(9);
 
-              case 37:
+              case 32:
               case 'end':
-                return _context5.stop();
+                return _context6.stop();
             }
           }
-        }, watch, this, [[3,, 6, 37]]);
+        }, watch, this, [[6,, 9, 32]]);
       }),
-      cleanup: _regenerator2.default.mark(function cleanup(status, category, id) {
+      cleanup: _regenerator2.default.mark(function cleanup(category, id) {
         var roster;
-        return _regenerator2.default.wrap(function cleanup$(_context6) {
+        return _regenerator2.default.wrap(function cleanup$(_context7) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
                 roster = this.task.roster;
 
@@ -2137,7 +2203,7 @@ var Process = function () {
 
               case 2:
               case 'end':
-                return _context6.stop();
+                return _context7.stop();
             }
           }
         }, cleanup, this);
@@ -2145,170 +2211,171 @@ var Process = function () {
       cancel: _regenerator2.default.mark(function cancel(category, id) {
         var task, ids, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _id;
 
-        return _regenerator2.default.wrap(function cancel$(_context7) {
+        return _regenerator2.default.wrap(function cancel$(_context8) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                task = void 0;
+                _context8.next = 2;
+                return (0, _effects.apply)(this, this.task.task, [category, id]);
 
-                if (!this.task.roster[category]) {
-                  _context7.next = 37;
+              case 2:
+                task = _context8.sent;
+
+                if (task) {
+                  _context8.next = 5;
                   break;
                 }
 
-                if (!(id && this.task.roster[category][id])) {
-                  _context7.next = 6;
+                return _context8.abrupt('return');
+
+              case 5:
+                if (!(task && task['@@redux-saga/TASK'] && task.isRunning())) {
+                  _context8.next = 10;
                   break;
                 }
 
-                task = this.task.roster[category][id];
-                _context7.next = 34;
+                _context8.next = 8;
+                return (0, _effects.cancel)(task);
+
+              case 8:
+                _context8.next = 38;
                 break;
 
-              case 6:
-                if (id) {
-                  _context7.next = 34;
+              case 10:
+                if (!(task && !task['@@redux-saga/TASK'])) {
+                  _context8.next = 38;
                   break;
                 }
 
-                ids = (0, _keys2.default)(this.task.roster[category]);
+                ids = (0, _keys2.default)(task);
                 _iteratorNormalCompletion3 = true;
                 _didIteratorError3 = false;
                 _iteratorError3 = undefined;
-                _context7.prev = 11;
+                _context8.prev = 15;
                 _iterator3 = (0, _getIterator3.default)(ids);
 
-              case 13:
+              case 17:
                 if (_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done) {
-                  _context7.next = 20;
+                  _context8.next = 24;
                   break;
                 }
 
                 _id = _step3.value;
-                _context7.next = 17;
+                _context8.next = 21;
                 return (0, _effects.fork)([this, this.task.cancel], category, _id);
 
-              case 17:
+              case 21:
                 _iteratorNormalCompletion3 = true;
-                _context7.next = 13;
+                _context8.next = 17;
                 break;
 
-              case 20:
-                _context7.next = 26;
+              case 24:
+                _context8.next = 30;
                 break;
-
-              case 22:
-                _context7.prev = 22;
-                _context7.t0 = _context7['catch'](11);
-                _didIteratorError3 = true;
-                _iteratorError3 = _context7.t0;
 
               case 26:
-                _context7.prev = 26;
-                _context7.prev = 27;
+                _context8.prev = 26;
+                _context8.t0 = _context8['catch'](15);
+                _didIteratorError3 = true;
+                _iteratorError3 = _context8.t0;
+
+              case 30:
+                _context8.prev = 30;
+                _context8.prev = 31;
 
                 if (!_iteratorNormalCompletion3 && _iterator3.return) {
                   _iterator3.return();
                 }
 
-              case 29:
-                _context7.prev = 29;
+              case 33:
+                _context8.prev = 33;
 
                 if (!_didIteratorError3) {
-                  _context7.next = 32;
+                  _context8.next = 36;
                   break;
                 }
 
                 throw _iteratorError3;
 
-              case 32:
-                return _context7.finish(29);
-
-              case 33:
-                return _context7.finish(26);
-
-              case 34:
-                if (!(task && task.isRunning())) {
-                  _context7.next = 37;
-                  break;
-                }
-
-                _context7.next = 37;
-                return (0, _effects.cancel)(task);
+              case 36:
+                return _context8.finish(33);
 
               case 37:
+                return _context8.finish(30);
+
+              case 38:
               case 'end':
-                return _context7.stop();
+                return _context8.stop();
             }
           }
-        }, cancel, this, [[11, 22, 26, 34], [27,, 29, 33]]);
+        }, cancel, this, [[15, 26, 30, 38], [31,, 33, 37]]);
       }),
       cancelAll: _regenerator2.default.mark(function cancelAll() {
         var categories, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, category;
 
-        return _regenerator2.default.wrap(function cancelAll$(_context8) {
+        return _regenerator2.default.wrap(function cancelAll$(_context9) {
           while (1) {
-            switch (_context8.prev = _context8.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 categories = (0, _keys2.default)(this.task.roster);
                 _iteratorNormalCompletion4 = true;
                 _didIteratorError4 = false;
                 _iteratorError4 = undefined;
-                _context8.prev = 4;
+                _context9.prev = 4;
                 _iterator4 = (0, _getIterator3.default)(categories);
 
               case 6:
                 if (_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done) {
-                  _context8.next = 13;
+                  _context9.next = 13;
                   break;
                 }
 
                 category = _step4.value;
-                _context8.next = 10;
+                _context9.next = 10;
                 return (0, _effects.apply)(this, this.task.cancel, [category]);
 
               case 10:
                 _iteratorNormalCompletion4 = true;
-                _context8.next = 6;
+                _context9.next = 6;
                 break;
 
               case 13:
-                _context8.next = 19;
+                _context9.next = 19;
                 break;
 
               case 15:
-                _context8.prev = 15;
-                _context8.t0 = _context8['catch'](4);
+                _context9.prev = 15;
+                _context9.t0 = _context9['catch'](4);
                 _didIteratorError4 = true;
-                _iteratorError4 = _context8.t0;
+                _iteratorError4 = _context9.t0;
 
               case 19:
-                _context8.prev = 19;
-                _context8.prev = 20;
+                _context9.prev = 19;
+                _context9.prev = 20;
 
                 if (!_iteratorNormalCompletion4 && _iterator4.return) {
                   _iterator4.return();
                 }
 
               case 22:
-                _context8.prev = 22;
+                _context9.prev = 22;
 
                 if (!_didIteratorError4) {
-                  _context8.next = 25;
+                  _context9.next = 25;
                   break;
                 }
 
                 throw _iteratorError4;
 
               case 25:
-                return _context8.finish(22);
+                return _context9.finish(22);
 
               case 26:
-                return _context8.finish(19);
+                return _context9.finish(19);
 
               case 27:
               case 'end':
-                return _context8.stop();
+                return _context9.stop();
             }
           }
         }, cancelAll, this, [[4, 15, 19, 27], [20,, 22, 26]]);
@@ -2377,6 +2444,7 @@ var Process = function () {
     this.task.save = this.task.save.bind(this);
     this.task.cancel = this.task.cancel.bind(this);
     this.task.watch = this.task.watch.bind(this);
+    this.task.task = this.task.task.bind(this);
     this.task.cleanup = this.task.cleanup.bind(this);
     this.task.cancelAll = this.task.cancelAll.bind(this);
 
@@ -2395,38 +2463,38 @@ var Process = function () {
 
       var results, _iteratorNormalCompletion5, _didIteratorError5, _iteratorError5, _iterator5, _step5, selected;
 
-      return _regenerator2.default.wrap(function select$(_context9) {
+      return _regenerator2.default.wrap(function select$(_context10) {
         while (1) {
-          switch (_context9.prev = _context9.next) {
+          switch (_context10.prev = _context10.next) {
             case 0:
               results = void 0;
 
               if (!(typeof selector === 'string' && this.__utils.selectors && (0, _keys2.default)(this.__utils.selectors).includes(selector))) {
-                _context9.next = 7;
+                _context10.next = 7;
                 break;
               }
 
-              _context9.next = 4;
+              _context10.next = 4;
               return (0, _effects.select)(this.__utils.selectors[selector], props);
 
             case 4:
-              return _context9.abrupt('return', _context9.sent);
+              return _context10.abrupt('return', _context10.sent);
 
             case 7:
               if (!(typeof selector === 'function')) {
-                _context9.next = 13;
+                _context10.next = 13;
                 break;
               }
 
-              _context9.next = 10;
+              _context10.next = 10;
               return (0, _effects.select)(selector);
 
             case 10:
-              return _context9.abrupt('return', _context9.sent);
+              return _context10.abrupt('return', _context10.sent);
 
             case 13:
               if (!Array.isArray(selector)) {
-                _context9.next = 46;
+                _context10.next = 46;
                 break;
               }
 
@@ -2434,88 +2502,88 @@ var Process = function () {
               _iteratorNormalCompletion5 = true;
               _didIteratorError5 = false;
               _iteratorError5 = undefined;
-              _context9.prev = 18;
+              _context10.prev = 18;
               _iterator5 = (0, _getIterator3.default)(selector);
 
             case 20:
               if (_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done) {
-                _context9.next = 30;
+                _context10.next = 30;
                 break;
               }
 
               selected = _step5.value;
-              _context9.t0 = results;
-              _context9.next = 25;
+              _context10.t0 = results;
+              _context10.next = 25;
               return (0, _effects.apply)(this, this.select, [selected]);
 
             case 25:
-              _context9.t1 = _context9.sent;
+              _context10.t1 = _context10.sent;
 
-              _context9.t0.push.call(_context9.t0, _context9.t1);
+              _context10.t0.push.call(_context10.t0, _context10.t1);
 
             case 27:
               _iteratorNormalCompletion5 = true;
-              _context9.next = 20;
+              _context10.next = 20;
               break;
 
             case 30:
-              _context9.next = 36;
+              _context10.next = 36;
               break;
 
             case 32:
-              _context9.prev = 32;
-              _context9.t2 = _context9['catch'](18);
+              _context10.prev = 32;
+              _context10.t2 = _context10['catch'](18);
               _didIteratorError5 = true;
-              _iteratorError5 = _context9.t2;
+              _iteratorError5 = _context10.t2;
 
             case 36:
-              _context9.prev = 36;
-              _context9.prev = 37;
+              _context10.prev = 36;
+              _context10.prev = 37;
 
               if (!_iteratorNormalCompletion5 && _iterator5.return) {
                 _iterator5.return();
               }
 
             case 39:
-              _context9.prev = 39;
+              _context10.prev = 39;
 
               if (!_didIteratorError5) {
-                _context9.next = 42;
+                _context10.next = 42;
                 break;
               }
 
               throw _iteratorError5;
 
             case 42:
-              return _context9.finish(39);
+              return _context10.finish(39);
 
             case 43:
-              return _context9.finish(36);
+              return _context10.finish(36);
 
             case 44:
-              _context9.next = 50;
+              _context10.next = 50;
               break;
 
             case 46:
               if (!(typeof selector === 'string' && this.config && this.config.reduces)) {
-                _context9.next = 50;
+                _context10.next = 50;
                 break;
               }
 
-              _context9.next = 49;
+              _context10.next = 49;
               return (0, _effects.select)(function (state) {
                 return state[_this2.config.reduces][selector];
               });
 
             case 49:
-              return _context9.abrupt('return', _context9.sent);
+              return _context10.abrupt('return', _context10.sent);
 
             case 50:
-              return _context9.abrupt('return', results);
+              return _context10.abrupt('return', results);
 
             case 51:
             case 'end':
-              return _context9.stop();
+              return _context10.stop();
           }
         }
       }, select, this, [[18, 32, 36, 44], [37,, 39, 43]]);
@@ -2527,39 +2595,39 @@ var Process = function () {
           _len5,
           args,
           _key5,
-          _args10 = arguments;
+          _args11 = arguments;
 
-      return _regenerator2.default.wrap(function dispatch$(_context10) {
+      return _regenerator2.default.wrap(function dispatch$(_context11) {
         while (1) {
-          switch (_context10.prev = _context10.next) {
+          switch (_context11.prev = _context11.next) {
             case 0:
               if (!(typeof action === 'string' && this.__utils.actions && (0, _keys2.default)(this.__utils.actions).includes(action))) {
-                _context10.next = 6;
+                _context11.next = 6;
                 break;
               }
 
-              for (_len5 = _args10.length, args = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
-                args[_key5 - 1] = _args10[_key5];
+              for (_len5 = _args11.length, args = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+                args[_key5 - 1] = _args11[_key5];
               }
 
-              _context10.next = 4;
+              _context11.next = 4;
               return (0, _effects.put)((_utils$actions = this.__utils.actions)[action].apply(_utils$actions, args));
 
             case 4:
-              _context10.next = 12;
+              _context11.next = 12;
               break;
 
             case 6:
               if (!(action && action.type)) {
-                _context10.next = 11;
+                _context11.next = 11;
                 break;
               }
 
-              _context10.next = 9;
+              _context11.next = 9;
               return (0, _effects.put)(action);
 
             case 9:
-              _context10.next = 12;
+              _context11.next = 12;
               break;
 
             case 11:
@@ -2567,7 +2635,7 @@ var Process = function () {
 
             case 12:
             case 'end':
-              return _context10.stop();
+              return _context11.stop();
           }
         }
       }, dispatch, this);
@@ -4845,10 +4913,10 @@ Object.defineProperty(exports, 'buildProcesses', {
     return _effects.buildProcesses;
   }
 });
-Object.defineProperty(exports, 'processName', {
+Object.defineProperty(exports, 'processContext', {
   enumerable: true,
   get: function get() {
-    return _effects.processName;
+    return _effects.processContext;
   }
 });
 

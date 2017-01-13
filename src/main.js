@@ -3,7 +3,7 @@ export {
   runProcesses, 
   runProcess,
   buildProcesses,
-  processName,
+  processContext
 } from './lib/effects'
 
 export {

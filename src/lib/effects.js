@@ -5,8 +5,19 @@ import * as generate from './reducerGenerators'
 
 const props = { compiled: false, mergeReducers: true }
 
+const PROCESS_CONTEXT = {
+  actions:   {},
+  types:     {},
+  selectors: {}
+}
+
 const processName  = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
 const isObjLiteral = o => ( o !== null && ! Array.isArray(o) && typeof o !== 'function' && typeof o === 'object' )
+
+function processContext(what) {
+  if ( ! what ) { return PROCESS_CONTEXT }
+  return PROCESS_CONTEXT[what]
+}
 
 function* runProcesses(categories) {
   for ( const categoryID in categories ) {
@@ -43,7 +54,7 @@ function buildProcesses(categories) {
   const processes = {
     reducers: {},
     initialState: {},
-    context: {}
+    context: {},
   }
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
@@ -103,6 +114,13 @@ function buildProcess(proc) {
     buildSelectors(proc, compiled)
     buildActions(proc, compiled)
     mutateProcess(proc, compiled)
+  } else {
+    /* Already compiled this process, return compiled data */
+    if ( proc.reducer ) { compiled.reducer = proc.reducer }
+    if ( proc.actions ) { compiled.actions = proc.actions }
+    if ( proc.selectors ) { compiled.selectors = proc.selectors }
+    if ( proc.types ) { compiled.types = proc.types }
+    compiled.cached = true
   }
   compiled.initialState = proc.initialState
   return compiled
@@ -152,6 +170,7 @@ const buildActions = (process, compiled = {}) => {
 }
 
 const mutateProcess = (process, compiled) => {
+  if ( compiled.reducer )   { process.reducer   = compiled.reducer   }
   if ( compiled.actions   ) { process.actions   = compiled.actions   }
   if ( compiled.selectors ) { process.selectors = compiled.selectors }
   if ( compiled.types )     { process.types     = compiled.types     }
@@ -179,16 +198,38 @@ const mergeReducers = (compiled, processes) => {
 }
 
 const parseCompiledProcess = (compiled, processes) => {
-  if ( compiled.reducer && compiled.reducer.name && compiled.reducer.reducer ) {
+  if ( compiled.reducer && compiled.reducer.reducer ) {
     const name = compiled.reducer.name
     if ( ! name ) { throw new Error('Reducer Does Not Have a Name? ', compiled) }
     if ( processes.reducers[name] ) {
       mergeReducers(compiled, processes)
-    } else if ( name ) {
+    } else {
       processes.reducers[name]      = compiled.reducer.reducer
       processes.initialState[name]  = compiled.initialState || {}
     }
   }
+  if ( ! compiled.cached ) {
+    /* If we are returning cached data no need to merge into the global context */
+    if ( compiled.actions ) {
+      PROCESS_CONTEXT.actions = {
+        ...PROCESS_CONTEXT.actions,
+        ...compiled.actions
+      }
+    }
+    if ( compiled.types ) {
+      PROCESS_CONTEXT.types = {
+        ...PROCESS_CONTEXT.types,
+        ...compiled.types
+      }
+    }
+    if ( compiled.selectors ) {
+      PROCESS_CONTEXT.selectors = {
+        ...PROCESS_CONTEXT.selectors,
+        ...compiled.selectors
+      }
+    }
+  }
+  
 }
 
-export { runProcesses, runProcess, buildProcesses, processName }
+export { runProcesses, runProcess, buildProcesses, processName, processContext }

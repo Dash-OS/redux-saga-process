@@ -5,7 +5,6 @@ const buildTypes = types => {
   const compiled = {}
   for ( let type of types ) {
     const snakeCase     = toReduxType(type)
-    compiled[snakeCase] = snakeCase
     compiled[type]      = snakeCase
   }
   return compiled
