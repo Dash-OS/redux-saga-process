@@ -61,8 +61,6 @@ import Process from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
 
-
-
 ***
 
 #### Building your Processes
@@ -97,6 +95,9 @@ will need to add the reducer that was generated for you.  If you add many reduce
 all be contained within ```process.processReducers``` and ready to be combined using a call to 
 redux's [combineReducers](http://redux.js.org/docs/api/combineReducers.html) helper function.  
 
+Once you have done this, any processes which specify a reducer will automatically build the reducer 
+for you.  If multiple processes specify the same reducer name, they will be merged in the order they 
+were created. This is done by using the ```arrayMapReducer``` generator from [reducerGenerators.js](https://github.com/Dash-OS/redux-saga-process/blob/master/src/lib/reducerGenerators.js).
 
 ```javascript
 const rootReducer = combineReducers({
@@ -104,7 +105,6 @@ const rootReducer = combineReducers({
   ...processes.processReducers,
 })
 ```
-
 
 ***
 
