@@ -13,7 +13,9 @@ const buildTypes = types => {
 
 const buildCreator = (type, keys) => (...args) => {
   var i = 0, compiled = { type }
-  if ( Array.isArray(keys) ) {
+  if ( keys === null || typeof keys === undefined ) {
+    compiled = { ...compiled, ...(isObjLiteral(args[0]) && args[0]) }
+  } else if ( Array.isArray(keys) ) {
     for ( const key of keys ) { compiled[key] = args[i++] }
     if (args.length > keys.length && isObjLiteral(args[i + 1]))
       compiled = { ...compiled, ...args[i + 1] }

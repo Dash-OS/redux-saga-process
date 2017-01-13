@@ -44,23 +44,31 @@ to document everything you need to know here.
 > tests at this time).
 
 ***
-#### Thoughts, Comments, Quesstions, Pull Requests welcome!
+
+<center><h3>Thoughts, Comments, Quesstions, Pull Requests welcome!</h3></center>
+
 ***
 
 #### Creating a Saga Redux Process
+
+
 
 ```javascript
 import Process from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
 
+
+
 ***
 
 #### Building your Processes
 
+
 Before we [create our Redux Store](http://redux.js.org/docs/basics/Store.html#store) we should start 
 by building our processes.  This process will read all the processes you have built and run some mutations 
 against the properties to prepare them so they are ready when we run them.
+
 
 ```javascript
 import { combineReducers } from 'redux' // if we are using RSP Reducers
@@ -69,18 +77,23 @@ import * as processCategories from '../processes'
 const processes = buildProcesses(processCategories)
 ```
 
+
 > ***Note:*** Our ```../processes``` directory contains an index which exports "process categories." 
 > when you build your processes, the library will search up to two levels deep for classes that can be 
-> built and build any discovered processes. 
+> built and build any discovered processes.
+
+
 
 ***
 
 #### Adding your Processes Reducers (Optional)
 
+
 If any of your RSP's defined a reducer that they either wanted to join or create you 
 will need to add the reducer that was generated for you.  If you add many reducers they will 
 all be contained within ```process.processReducers``` and ready to be combined using a call to 
 redux's [combineReducers](http://redux.js.org/docs/api/combineReducers.html) helper function.  
+
 
 ```javascript
 const rootReducer = combineReducers({
@@ -89,12 +102,15 @@ const rootReducer = combineReducers({
 })
 ```
 
+
 ***
 
 #### Running your Processes
 
+
 Now that we have built our processes we need to run them.  This is done from within your 
 [root redux-saga](https://redux-saga.github.io/redux-saga/docs/introduction/BeginnerTutorial.html). 
+
 
 ```javascript
 import { fork } from 'redux-saga/effects'
@@ -108,11 +124,14 @@ function* root() {
 export default root
 ```
 
+
 > Each process uses the [spawn](https://redux-saga.github.io/redux-saga/docs/api/index.html#spawncontext-fn-args) 
 > method to create an independent frame of execution that should not be affected by your other 
 > sagas and/or processes.  You may optionally call the runProcesses function like you would any other redux-saga.
 
+
 # Building your Processes
+
 
 So now that we have seen how to implement the RSP Pattern during startup, lets take a look 
 at what they can actually do for us.  Our goal was to build an extensible & modular lifecycle 
@@ -120,21 +139,30 @@ for our various side-effect logic that we were already doing with redux-saga.
 
 As shown above we start by building an ES6 class which extends ```Process```:
 
+
 ```javascript
 import Process from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
 
+
 ***
 
+
 ## Process Properties
+
 
 Our classes can be configured using [static properties](http://exploringjs.com/es6/ch_classes.html).  In our example 
 we are using the babel [transform-class-properties](https://babeljs.io/docs/plugins/transform-class-properties/) plugin.
 
+
 > ***Note:*** All of the properties are completely optional.
+
 ***
+
+
 ### static ```config```
+
 
 ```javascript
 class MyProcess extends Process {
@@ -168,7 +196,9 @@ the properties that can be provided within this property.
 
 ***
 
+
 ### static ```initialState```
+
 
 ```javascript
 class MyProcess extends Process {
@@ -193,7 +223,9 @@ state on your first reduction.
 
 ***
 
+
 ### static ```reducer```
+
 
 ```javascript
 import { MY_TYPE } from '../constants'
@@ -222,16 +254,19 @@ actions into your processes reducers.  Your reducer property can be either a ```
 itself is a reducer, an ```Object Literal``` (as shown above) which maps specific types into a reducer function, or 
 an ```Array``` where each element itself is a reducer.
 
+
 > ***Note:*** Our higher-order-reducers will automatically return an unmodified state if no types match your specified 
 > handlers.
 
 > ***Note:*** Reducers should be pure.  You can not access ```this``` within them. Instead 
 > you should pass any desired properties within a dispatched action.
 
+
 <details>
-  <summary><b>An Example of using a Reducer Function (Click to Expand)</b></summary><p>
-<br />
-Here is an example of a reducer format that matches the style shown in the ```redux``` documentation:
+  <summary><b>An Example of using a Reducer Function</b></summary><p>
+
+Here is an example of a reducer format that matches the style shown in the <b>redux</b> documentation:
+
 
 ```javascript
 static reducer = function(state, action) {
@@ -246,6 +281,7 @@ static reducer = function(state, action) {
   }
 };
 ```
+
 </p></details>
 
 <details>
@@ -254,6 +290,7 @@ static reducer = function(state, action) {
 This is not strictly important to see or understand, but for those of you that are interested 
 in how we are building the reducers below is an example of the object filter reducer we showed 
 in the first example.
+
 
 ```javascript
 const objectMapReducerGenerator = 
@@ -266,7 +303,9 @@ const objectMapReducerGenerator =
 ```
 </p></details>
 
+
 ***
+
 
 ### static ```actionRoutes```
 
@@ -339,27 +378,42 @@ class MyProcess extends Process {
   
   static initialState = {
     /* Initial 'myState' Reducer State */
-    myKey: 'myValue'
+    foo: { nested: 'bar' },
+    baz: 'qux'
   };
   
   static selectors = {
-    myKey: [ myState => myState.myKey ],
-    foo:   [ s => s, s => s.anotherState.foo ],
-    foo2:  [ s => s.anotherState, anotherState => anotherState.foo ] // identical to above
+    local:   [ myState => myState.foo ],
+    global:  [ state => state, state => state.anotherKey.foo ],
+    global2: [ state => state.myState, myState => myState.baz ] // identical to above
+    composed: [ 
+      state => state.myState.foo.nested, 
+      state => state.myState.baz,
+      (foo, baz) => ({ foo, baz })
+    ],
   };
   
   * processStarts() {
-    const myKey  = yield* this.select('myKey') // myValue
-    const foo    = yield* this.select('foo')     // value of foo in anotherState key
-    const custom = yield* this.select(state => state.anotherState.foo) // same as above
+    const local  = yield* this.select('local') // myValue
+    const global = yield* this.select('global')     // value of foo in anotherState key
+    const global2 = yield* this.select('global2')
+    const composed = yield* this.select('composed')
+    console.log(local, global, global2, composed)
+
   }
 }
 ```
 
-Currently powered by the [reselect](https://github.com/reactjs/reselect) library (although we may 
-remove this dependency if requested), selectors allow us to capture the state of our Application 
+Currently powered by the [reselect](https://github.com/reactjs/reselect) library (although at some point 
+we would like to allow for plugins instead), selectors allow us to capture the state of our Application 
 within our processes.  While it is generally a best practice to handle state within the process for 
-most things (example: ```this.state```), it can be helpful to capture our state. 
+most things related to our processes encapsulated logic (example: ```this.state```), 
+it can be helpful to capture our state. 
+
+You can use the ```this.select``` function to conduct operations using the pre-built selectors.  However, 
+you can also dynamically specify selectors that were not built using the reselect package (using the selectors property).
+
+
 
 Under-the-hood this.select is simply calling redux-sagas [yield select(selector)](https://redux-saga.github.io/redux-saga/docs/api/index.html#selectselector-args) 
 and feeding it a [reselect selector](https://github.com/reactjs/reselect#createselectorinputselectors--inputselectors-resultfunc)
@@ -398,6 +452,30 @@ class MyProcess extends Process {
   
 }
 ```
+
+***
+
+# Process API
+
+In addition to the static properties, process contains special API helpers
+that can be used within your process to make some patterns easier to work with
+and maintain.
+
+## Process Task System
+
+### this.task.create()
+
+### this.task.save()
+
+### this.task.cancel()
+
+### this.task.watch()
+
+### this.task.cancelAll()
+
+## Process Observables
+
+### this.observable.create()
 
 ***
 

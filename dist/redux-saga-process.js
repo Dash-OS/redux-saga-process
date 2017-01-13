@@ -706,7 +706,9 @@ var buildCreator = function buildCreator(type, keys) {
 
     var i = 0,
         compiled = { type: type };
-    if (Array.isArray(keys)) {
+    if (keys === null || (typeof keys === 'undefined' ? 'undefined' : (0, _typeof3.default)(keys)) === undefined) {
+      compiled = (0, _extends3.default)({}, compiled, isObjLiteral(args[0]) && args[0]);
+    } else if (Array.isArray(keys)) {
       var _iteratorNormalCompletion2 = true;
       var _didIteratorError2 = false;
       var _iteratorError2 = undefined;
@@ -1258,8 +1260,7 @@ var isObjLiteral = function isObjLiteral(o) {
 };
 
 function runProcesses(categories) {
-  var categoryID, category, processID, _process;
-
+  var categoryID, category, processID, process;
   return _regenerator2.default.wrap(function runProcesses$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -1275,7 +1276,7 @@ function runProcesses(categories) {
           categoryID = _context.t1.value;
           category = categories[categoryID];
 
-          if (!((typeof category === 'undefined' ? 'undefined' : (0, _typeof3.default)(category)) !== 'object')) {
+          if (!(processName(category) !== 'Process' && (typeof category === 'undefined' ? 'undefined' : (0, _typeof3.default)(category)) !== 'object')) {
             _context.next = 6;
             break;
           }
@@ -1305,15 +1306,15 @@ function runProcesses(categories) {
           }
 
           processID = _context.t3.value;
-          _process = category[processID];
+          process = category[processID];
 
-          if (!(processName(_process) === 'Process')) {
+          if (!(processName(process) === 'Process')) {
             _context.next = 20;
             break;
           }
 
           _context.next = 18;
-          return (0, _effects.fork)(runProcess, _process);
+          return (0, _effects.fork)(runProcess, process);
 
         case 18:
           _context.next = 21;
@@ -1338,8 +1339,8 @@ function runProcesses(categories) {
   }, _marked[0], this);
 }
 
-function runProcess(process) {
-  var _process$config, config, SagaProcess;
+function runProcess(proc) {
+  var _proc$config, config, SagaProcess;
 
   return _regenerator2.default.wrap(function runProcess$(_context2) {
     while (1) {
@@ -1347,12 +1348,12 @@ function runProcess(process) {
         case 0:
           if (!props.compiled) {
             console.warn('Did not connect to reducers before calling runProcesses, building the process now');
-            buildProcess(process);
+            buildProcess(proc);
           }
-          _process$config = process.config, config = _process$config === undefined ? {} : _process$config;
-          SagaProcess = new process(config);
+          _proc$config = proc.config, config = _proc$config === undefined ? {} : _proc$config;
+          SagaProcess = new proc(config);
           _context2.next = 5;
-          return (0, _effects.spawn)(SagaProcess.__utils.init, process);
+          return (0, _effects.spawn)(SagaProcess.__utils.init, proc);
 
         case 5:
         case 'end':
@@ -1362,7 +1363,7 @@ function runProcess(process) {
   }, _marked[1], this);
 }
 
-var buildProcesses = function buildProcesses(categories) {
+function buildProcesses(categories) {
   if (!isObjLiteral(categories)) {
     throw new Error('buildProcesses expects an object');
   }
@@ -1380,17 +1381,17 @@ var buildProcesses = function buildProcesses(categories) {
       var categoryID = _step.value;
 
       var category = categories[categoryID];
-      if ((typeof category === 'undefined' ? 'undefined' : (0, _typeof3.default)(category)) !== 'object') {
+      if (processName(category) !== 'Process' && (typeof category === 'undefined' ? 'undefined' : (0, _typeof3.default)(category)) !== 'object') {
         continue;
       }
       if (processName(category) === 'Process') {
-        var compiled = buildProcess(process);
+        var compiled = buildProcess(category);
         parseCompiledProcess(compiled, processes);
       } else {
         for (var processID in category) {
-          var _process2 = category[processID];
-          if (processName(_process2) === 'Process') {
-            var _compiled = buildProcess(_process2);
+          var proc = category[processID];
+          if (processName(proc) === 'Process') {
+            var _compiled = buildProcess(proc);
             parseCompiledProcess(_compiled, processes);
           }
         }
@@ -1433,19 +1434,19 @@ var buildProcesses = function buildProcesses(categories) {
     processReducers: processes.reducers,
     initialStates: processes.initialState
   };
-};
+}
 
-var buildProcess = function buildProcess(process) {
+function buildProcess(proc) {
   var compiled = {};
   if (!props.compiled) {
-    buildReducer(process, compiled);
-    buildSelectors(process, compiled);
-    buildActions(process, compiled);
-    mutateProcess(process, compiled);
+    buildReducer(proc, compiled);
+    buildSelectors(proc, compiled);
+    buildActions(proc, compiled);
+    mutateProcess(proc, compiled);
   }
-  compiled.initialState = process.initialState;
+  compiled.initialState = proc.initialState;
   return compiled;
-};
+}
 
 var buildReducer = function buildReducer(_ref) {
   var _ref$config = _ref.config,
@@ -1487,6 +1488,8 @@ var buildSelectors = function buildSelectors(_ref2) {
         } else {
           compiled.selectors[selector] = _reselect.createSelector.apply(undefined, (0, _toConsumableArray3.default)(selectors[selector]));
         }
+      } else if (isObjLiteral(selectorValue)) {
+        compiled.selectors[selector] = (0, _reselect.createStructuredSelector)(selectors[selector]);
       } else {
         throw new Error('Process Selectors must be an array of selectors');
       }
@@ -1546,7 +1549,7 @@ var parseCompiledProcess = function parseCompiledProcess(compiled, processes) {
       mergeReducers(compiled, processes);
     } else if (name) {
       processes.reducers[name] = compiled.reducer.reducer;
-      processes.initialState[name] = compiled.initialState;
+      processes.initialState[name] = compiled.initialState || {};
     }
   }
 };
@@ -1930,216 +1933,382 @@ var Process = function () {
       })
     };
     this.task = {
-      save: _regenerator2.default.mark(function save(task, category, id) {
-        var prevTasks;
-        return _regenerator2.default.wrap(function save$(_context3) {
+      create: _regenerator2.default.mark(function create(category, id, callback) {
+        for (var _len = arguments.length, props = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+          props[_key - 3] = arguments[_key];
+        }
+
+        var task;
+        return _regenerator2.default.wrap(function create$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                prevTasks = this.task.savedTasks;
+                _context3.next = 2;
+                return _effects.fork.apply(undefined, [[this, callback]].concat(props));
 
-                if (!(prevTasks[category] && prevTasks[category][id])) {
-                  _context3.next = 5;
-                  break;
-                }
+              case 2:
+                task = _context3.sent;
+                return _context3.delegateYield(this.task.save(task, category, id), 't0', 4);
 
-                console.warn('You must cancel a task before you set a new task with same category and id. We are cancelling it for you');
-                _context3.next = 5;
-                return (0, _effects.apply)(this, this.task.cancel, [category, id]);
+              case 4:
+                return _context3.abrupt('return', task);
 
               case 5:
-                this.task.savedTasks = (0, _extends5.default)({}, prevTasks, (0, _defineProperty3.default)({}, category, (0, _extends5.default)({}, prevTasks[category], (0, _defineProperty3.default)({}, id, task))));
-
-              case 6:
               case 'end':
                 return _context3.stop();
             }
           }
-        }, save, this);
+        }, create, this);
       }),
-      cancel: _regenerator2.default.mark(function cancel(category, id) {
-        var task;
-        return _regenerator2.default.wrap(function cancel$(_context4) {
+
+      /*
+        this.task.save(...)
+          Saves a task with a category and id. 
+      */
+      save: _regenerator2.default.mark(function save(task, category, id) {
+        var roster;
+        return _regenerator2.default.wrap(function save$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                if (!(this.task.savedTasks[category] && this.task.savedTasks[category][id])) {
-                  _context4.next = 7;
+                roster = this.task.roster;
+                // If we save a task that was already saved previously we 
+                // will cancel the previous task automatically. 
+
+                if (!(roster[category] && roster[category][id])) {
+                  _context4.next = 4;
                   break;
                 }
 
-                task = this.task.savedTasks[category][id];
+                _context4.next = 4;
+                return (0, _effects.apply)(this, this.task.cancel, [category, id]);
 
-                if (!task.isRunning()) {
-                  _context4.next = 5;
-                  break;
-                }
-
-                _context4.next = 5;
-                return (0, _effects.cancel)(task);
-
-              case 5:
-                _context4.next = 8;
-                break;
+              case 4:
+                this.task.roster = (0, _extends5.default)({}, roster, (0, _defineProperty3.default)({}, category, (0, _extends5.default)({}, roster[category], (0, _defineProperty3.default)({}, id, task))));
+                _context4.next = 7;
+                return (0, _effects.fork)([this, this.task.watch], task, category, id, ['task', 'cleanup'], category, id);
 
               case 7:
-                console.warn('Attempted to cancel a task that doesnt exist', category, id);
-
-              case 8:
               case 'end':
                 return _context4.stop();
             }
           }
-        }, cancel, this);
+        }, save, this);
       }),
-      cancelCategory: _regenerator2.default.mark(function cancelCategory(category) {
-        var ids, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, id;
 
-        return _regenerator2.default.wrap(function cancelCategory$(_context5) {
+      /*
+        watchTask()
+          Register a callback that will be made with the "this" context attached
+          and as a redux-saga.  The callback will be made once the given tasks
+          promise (task.done) is resolved.  The callback will be made whether the 
+          task was cancelled or not.  The first prop sent to the callback will always 
+          include the status of the task.
+      */
+      watch: _regenerator2.default.mark(function watch(task, category, id, callback) {
+        var status,
+            _len2,
+            props,
+            _key2,
+            _fn,
+            _args5 = arguments;
+
+        return _regenerator2.default.wrap(function watch$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
               case 0:
-                if (!this.task.savedTasks[category]) {
-                  _context5.next = 30;
+                if (!(!task || !task.done)) {
+                  _context5.next = 3;
                   break;
                 }
 
-                ids = (0, _keys2.default)(this.task.savedTasks[category]);
-                _iteratorNormalCompletion3 = true;
-                _didIteratorError3 = false;
-                _iteratorError3 = undefined;
-                _context5.prev = 5;
-                _iterator3 = (0, _getIterator3.default)(ids);
+                console.error('[PROCESS] Task Watcher received an invalid task object: ', task);
+                return _context5.abrupt('return');
 
-              case 7:
-                if (_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done) {
+              case 3:
+                _context5.prev = 3;
+                _context5.next = 6;
+                return task.done;
+
+              case 6:
+                _context5.prev = 6;
+                status = void 0;
+                _context5.next = 10;
+                return (0, _effects.cancelled)();
+
+              case 10:
+                if (!_context5.sent) {
                   _context5.next = 14;
                   break;
                 }
 
-                id = _step3.value;
-                _context5.next = 11;
-                return (0, _effects.apply)(this, this.task.cancel, [category, id]);
-
-              case 11:
-                _iteratorNormalCompletion3 = true;
-                _context5.next = 7;
+                // Is extra logic needed for cancellation condition?
+                status = 'cancelled';
+                _context5.next = 15;
                 break;
 
               case 14:
-                _context5.next = 20;
+                status = 'ok';
+
+              case 15:
+                if (callback) {
+                  _context5.next = 17;
+                  break;
+                }
+
+                return _context5.abrupt('return');
+
+              case 17:
+                for (_len2 = _args5.length, props = Array(_len2 > 4 ? _len2 - 4 : 0), _key2 = 4; _key2 < _len2; _key2++) {
+                  props[_key2 - 4] = _args5[_key2];
+                }
+
+                if (!Array.isArray(callback)) {
+                  _context5.next = 25;
+                  break;
+                }
+
+                _fn = this[callback[0]] && this[callback[0]][callback[1]];
+
+                if (!(typeof _fn === 'function')) {
+                  _context5.next = 23;
+                  break;
+                }
+
+                _context5.next = 23;
+                return (0, _effects.apply)(this, _fn, [status].concat(props));
+
+              case 23:
+                _context5.next = 36;
                 break;
 
-              case 16:
-                _context5.prev = 16;
-                _context5.t0 = _context5['catch'](5);
-                _didIteratorError3 = true;
-                _iteratorError3 = _context5.t0;
+              case 25:
+                if (!(typeof this[callback] === 'function')) {
+                  _context5.next = 30;
+                  break;
+                }
+
+                _context5.next = 28;
+                return (0, _effects.apply)(this, this[callback], [status].concat(props));
+
+              case 28:
+                _context5.next = 36;
+                break;
+
+              case 30:
+                if (!(typeof callback === 'function')) {
+                  _context5.next = 35;
+                  break;
+                }
+
+                _context5.next = 33;
+                return (0, _effects.apply)(this, callback, [status].concat(props));
+
+              case 33:
+                _context5.next = 36;
+                break;
+
+              case 35:
+                console.error('Function not found: ', callback);
+
+              case 36:
+                return _context5.finish(6);
+
+              case 37:
+              case 'end':
+                return _context5.stop();
+            }
+          }
+        }, watch, this, [[3,, 6, 37]]);
+      }),
+      cleanup: _regenerator2.default.mark(function cleanup(status, category, id) {
+        var roster;
+        return _regenerator2.default.wrap(function cleanup$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                roster = this.task.roster;
+
+                if (roster[category] && roster[category][id]) {
+                  delete this.task.roster[category][id];
+                  if ((0, _keys2.default)(this.task.roster[category] === 0)) {
+                    delete this.task.roster[category];
+                  }
+                }
+
+              case 2:
+              case 'end':
+                return _context6.stop();
+            }
+          }
+        }, cleanup, this);
+      }),
+      cancel: _regenerator2.default.mark(function cancel(category, id) {
+        var task, ids, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, _id;
+
+        return _regenerator2.default.wrap(function cancel$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                task = void 0;
+
+                if (!this.task.roster[category]) {
+                  _context7.next = 37;
+                  break;
+                }
+
+                if (!(id && this.task.roster[category][id])) {
+                  _context7.next = 6;
+                  break;
+                }
+
+                task = this.task.roster[category][id];
+                _context7.next = 34;
+                break;
+
+              case 6:
+                if (id) {
+                  _context7.next = 34;
+                  break;
+                }
+
+                ids = (0, _keys2.default)(this.task.roster[category]);
+                _iteratorNormalCompletion3 = true;
+                _didIteratorError3 = false;
+                _iteratorError3 = undefined;
+                _context7.prev = 11;
+                _iterator3 = (0, _getIterator3.default)(ids);
+
+              case 13:
+                if (_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done) {
+                  _context7.next = 20;
+                  break;
+                }
+
+                _id = _step3.value;
+                _context7.next = 17;
+                return (0, _effects.fork)([this, this.task.cancel], category, _id);
+
+              case 17:
+                _iteratorNormalCompletion3 = true;
+                _context7.next = 13;
+                break;
 
               case 20:
-                _context5.prev = 20;
-                _context5.prev = 21;
+                _context7.next = 26;
+                break;
+
+              case 22:
+                _context7.prev = 22;
+                _context7.t0 = _context7['catch'](11);
+                _didIteratorError3 = true;
+                _iteratorError3 = _context7.t0;
+
+              case 26:
+                _context7.prev = 26;
+                _context7.prev = 27;
 
                 if (!_iteratorNormalCompletion3 && _iterator3.return) {
                   _iterator3.return();
                 }
 
-              case 23:
-                _context5.prev = 23;
+              case 29:
+                _context7.prev = 29;
 
                 if (!_didIteratorError3) {
-                  _context5.next = 26;
+                  _context7.next = 32;
                   break;
                 }
 
                 throw _iteratorError3;
 
-              case 26:
-                return _context5.finish(23);
+              case 32:
+                return _context7.finish(29);
 
-              case 27:
-                return _context5.finish(20);
+              case 33:
+                return _context7.finish(26);
 
-              case 28:
-                _context5.next = 31;
-                break;
+              case 34:
+                if (!(task && task.isRunning())) {
+                  _context7.next = 37;
+                  break;
+                }
 
-              case 30:
-                console.warn('Attempted to cancel tasks of a category that doesnt exist', category);
+                _context7.next = 37;
+                return (0, _effects.cancel)(task);
 
-              case 31:
+              case 37:
               case 'end':
-                return _context5.stop();
+                return _context7.stop();
             }
           }
-        }, cancelCategory, this, [[5, 16, 20, 28], [21,, 23, 27]]);
+        }, cancel, this, [[11, 22, 26, 34], [27,, 29, 33]]);
       }),
       cancelAll: _regenerator2.default.mark(function cancelAll() {
         var categories, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, category;
 
-        return _regenerator2.default.wrap(function cancelAll$(_context6) {
+        return _regenerator2.default.wrap(function cancelAll$(_context8) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                categories = (0, _keys2.default)(this.task.savedTasks);
+                categories = (0, _keys2.default)(this.task.roster);
                 _iteratorNormalCompletion4 = true;
                 _didIteratorError4 = false;
                 _iteratorError4 = undefined;
-                _context6.prev = 4;
+                _context8.prev = 4;
                 _iterator4 = (0, _getIterator3.default)(categories);
 
               case 6:
                 if (_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done) {
-                  _context6.next = 13;
+                  _context8.next = 13;
                   break;
                 }
 
                 category = _step4.value;
-                _context6.next = 10;
-                return (0, _effects.apply)(this, this.task.cancelCategory, [category]);
+                _context8.next = 10;
+                return (0, _effects.apply)(this, this.task.cancel, [category]);
 
               case 10:
                 _iteratorNormalCompletion4 = true;
-                _context6.next = 6;
+                _context8.next = 6;
                 break;
 
               case 13:
-                _context6.next = 19;
+                _context8.next = 19;
                 break;
 
               case 15:
-                _context6.prev = 15;
-                _context6.t0 = _context6['catch'](4);
+                _context8.prev = 15;
+                _context8.t0 = _context8['catch'](4);
                 _didIteratorError4 = true;
-                _iteratorError4 = _context6.t0;
+                _iteratorError4 = _context8.t0;
 
               case 19:
-                _context6.prev = 19;
-                _context6.prev = 20;
+                _context8.prev = 19;
+                _context8.prev = 20;
 
                 if (!_iteratorNormalCompletion4 && _iterator4.return) {
                   _iterator4.return();
                 }
 
               case 22:
-                _context6.prev = 22;
+                _context8.prev = 22;
 
                 if (!_didIteratorError4) {
-                  _context6.next = 25;
+                  _context8.next = 25;
                   break;
                 }
 
                 throw _iteratorError4;
 
               case 25:
-                return _context6.finish(22);
+                return _context8.finish(22);
 
               case 26:
-                return _context6.finish(19);
+                return _context8.finish(19);
 
               case 27:
               case 'end':
-                return _context6.stop();
+                return _context8.stop();
             }
           }
         }, cancelAll, this, [[4, 15, 19, 27], [20,, 22, 26]]);
@@ -2147,8 +2316,8 @@ var Process = function () {
     };
     this.observable = {
       create: function create(name, handleCancel) {
-        for (var _len = arguments.length, cancelArgs = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-          cancelArgs[_key - 2] = arguments[_key];
+        for (var _len3 = arguments.length, cancelArgs = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+          cancelArgs[_key3 - 2] = arguments[_key3];
         }
 
         var _this = this;
@@ -2157,8 +2326,8 @@ var Process = function () {
         var dispatchQueue = [];
         var observerRef = (0, _symbol2.default)(name);
         this.observable[observerRef] = function () {
-          for (var _len2 = arguments.length, values = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            values[_key2] = arguments[_key2];
+          for (var _len4 = arguments.length, values = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+            values[_key4] = arguments[_key4];
           }
 
           var queued = actionQueue.length + dispatchQueue.length;
@@ -2200,13 +2369,15 @@ var Process = function () {
     this.state = State;
 
     this.task.classTasks = [];
-    this.task.savedTasks = {};
+    this.task.roster = {};
 
     this.__utils.init = this.__utils.init.bind(this);
 
+    this.task.create = this.task.create.bind(this);
     this.task.save = this.task.save.bind(this);
     this.task.cancel = this.task.cancel.bind(this);
-    this.task.cancelCategory = this.task.cancelCategory.bind(this);
+    this.task.watch = this.task.watch.bind(this);
+    this.task.cleanup = this.task.cleanup.bind(this);
     this.task.cancelAll = this.task.cancelAll.bind(this);
 
     this.observable.create = this.observable.create.bind(this);
@@ -2215,45 +2386,47 @@ var Process = function () {
     this.dispatch = this.dispatch.bind(this);
   }
 
+  // yield* this.task.create('handlers', 'clicks', 'handleClick', action)
+
   (0, _createClass3.default)(Process, [{
     key: 'select',
-    value: _regenerator2.default.mark(function select(selector) {
+    value: _regenerator2.default.mark(function select(selector, props) {
       var _this2 = this;
 
       var results, _iteratorNormalCompletion5, _didIteratorError5, _iteratorError5, _iterator5, _step5, selected;
 
-      return _regenerator2.default.wrap(function select$(_context7) {
+      return _regenerator2.default.wrap(function select$(_context9) {
         while (1) {
-          switch (_context7.prev = _context7.next) {
+          switch (_context9.prev = _context9.next) {
             case 0:
               results = void 0;
 
               if (!(typeof selector === 'string' && this.__utils.selectors && (0, _keys2.default)(this.__utils.selectors).includes(selector))) {
-                _context7.next = 7;
+                _context9.next = 7;
                 break;
               }
 
-              _context7.next = 4;
-              return (0, _effects.select)(this.__utils.selectors[selector]);
+              _context9.next = 4;
+              return (0, _effects.select)(this.__utils.selectors[selector], props);
 
             case 4:
-              return _context7.abrupt('return', _context7.sent);
+              return _context9.abrupt('return', _context9.sent);
 
             case 7:
               if (!(typeof selector === 'function')) {
-                _context7.next = 13;
+                _context9.next = 13;
                 break;
               }
 
-              _context7.next = 10;
+              _context9.next = 10;
               return (0, _effects.select)(selector);
 
             case 10:
-              return _context7.abrupt('return', _context7.sent);
+              return _context9.abrupt('return', _context9.sent);
 
             case 13:
               if (!Array.isArray(selector)) {
-                _context7.next = 46;
+                _context9.next = 46;
                 break;
               }
 
@@ -2261,88 +2434,88 @@ var Process = function () {
               _iteratorNormalCompletion5 = true;
               _didIteratorError5 = false;
               _iteratorError5 = undefined;
-              _context7.prev = 18;
+              _context9.prev = 18;
               _iterator5 = (0, _getIterator3.default)(selector);
 
             case 20:
               if (_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done) {
-                _context7.next = 30;
+                _context9.next = 30;
                 break;
               }
 
               selected = _step5.value;
-              _context7.t0 = results;
-              _context7.next = 25;
+              _context9.t0 = results;
+              _context9.next = 25;
               return (0, _effects.apply)(this, this.select, [selected]);
 
             case 25:
-              _context7.t1 = _context7.sent;
+              _context9.t1 = _context9.sent;
 
-              _context7.t0.push.call(_context7.t0, _context7.t1);
+              _context9.t0.push.call(_context9.t0, _context9.t1);
 
             case 27:
               _iteratorNormalCompletion5 = true;
-              _context7.next = 20;
+              _context9.next = 20;
               break;
 
             case 30:
-              _context7.next = 36;
+              _context9.next = 36;
               break;
 
             case 32:
-              _context7.prev = 32;
-              _context7.t2 = _context7['catch'](18);
+              _context9.prev = 32;
+              _context9.t2 = _context9['catch'](18);
               _didIteratorError5 = true;
-              _iteratorError5 = _context7.t2;
+              _iteratorError5 = _context9.t2;
 
             case 36:
-              _context7.prev = 36;
-              _context7.prev = 37;
+              _context9.prev = 36;
+              _context9.prev = 37;
 
               if (!_iteratorNormalCompletion5 && _iterator5.return) {
                 _iterator5.return();
               }
 
             case 39:
-              _context7.prev = 39;
+              _context9.prev = 39;
 
               if (!_didIteratorError5) {
-                _context7.next = 42;
+                _context9.next = 42;
                 break;
               }
 
               throw _iteratorError5;
 
             case 42:
-              return _context7.finish(39);
+              return _context9.finish(39);
 
             case 43:
-              return _context7.finish(36);
+              return _context9.finish(36);
 
             case 44:
-              _context7.next = 50;
+              _context9.next = 50;
               break;
 
             case 46:
               if (!(typeof selector === 'string' && this.config && this.config.reduces)) {
-                _context7.next = 50;
+                _context9.next = 50;
                 break;
               }
 
-              _context7.next = 49;
+              _context9.next = 49;
               return (0, _effects.select)(function (state) {
                 return state[_this2.config.reduces][selector];
               });
 
             case 49:
-              return _context7.abrupt('return', _context7.sent);
+              return _context9.abrupt('return', _context9.sent);
 
             case 50:
-              return _context7.abrupt('return', results);
+              return _context9.abrupt('return', results);
 
             case 51:
             case 'end':
-              return _context7.stop();
+              return _context9.stop();
           }
         }
       }, select, this, [[18, 32, 36, 44], [37,, 39, 43]]);
@@ -2351,42 +2524,42 @@ var Process = function () {
     key: 'dispatch',
     value: _regenerator2.default.mark(function dispatch(action) {
       var _utils$actions,
-          _len3,
+          _len5,
           args,
-          _key3,
-          _args8 = arguments;
+          _key5,
+          _args10 = arguments;
 
-      return _regenerator2.default.wrap(function dispatch$(_context8) {
+      return _regenerator2.default.wrap(function dispatch$(_context10) {
         while (1) {
-          switch (_context8.prev = _context8.next) {
+          switch (_context10.prev = _context10.next) {
             case 0:
               if (!(typeof action === 'string' && this.__utils.actions && (0, _keys2.default)(this.__utils.actions).includes(action))) {
-                _context8.next = 6;
+                _context10.next = 6;
                 break;
               }
 
-              for (_len3 = _args8.length, args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                args[_key3 - 1] = _args8[_key3];
+              for (_len5 = _args10.length, args = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+                args[_key5 - 1] = _args10[_key5];
               }
 
-              _context8.next = 4;
+              _context10.next = 4;
               return (0, _effects.put)((_utils$actions = this.__utils.actions)[action].apply(_utils$actions, args));
 
             case 4:
-              _context8.next = 12;
+              _context10.next = 12;
               break;
 
             case 6:
               if (!(action && action.type)) {
-                _context8.next = 11;
+                _context10.next = 11;
                 break;
               }
 
-              _context8.next = 9;
+              _context10.next = 9;
               return (0, _effects.put)(action);
 
             case 9:
-              _context8.next = 12;
+              _context10.next = 12;
               break;
 
             case 11:
@@ -2394,7 +2567,7 @@ var Process = function () {
 
             case 12:
             case 'end':
-              return _context8.stop();
+              return _context10.stop();
           }
         }
       }, dispatch, this);

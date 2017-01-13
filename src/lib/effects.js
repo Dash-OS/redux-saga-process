@@ -1,6 +1,6 @@
 import { spawn, fork } from 'redux-saga/effects'
 import { createActions } from './createActions'
-import { createSelector } from 'reselect'
+import { createSelector, createStructuredSelector } from 'reselect'
 import * as generate from './reducerGenerators'
 
 const props = { compiled: false, mergeReducers: true }
@@ -11,7 +11,10 @@ const isObjLiteral = o => ( o !== null && ! Array.isArray(o) && typeof o !== 'fu
 function* runProcesses(categories) {
   for ( const categoryID in categories ) {
     const category = categories[categoryID]
-    if ( typeof category !== 'object' ) { continue }
+    if ( 
+      processName(category) !== 'Process' &&
+      typeof category !== 'object' 
+    ) { continue }
     if ( processName(category) === 'Process' ) {
       yield fork(runProcess, category)
     } else {
@@ -25,17 +28,17 @@ function* runProcesses(categories) {
   }
 }
 
-function* runProcess(process) {
+function* runProcess(proc) {
   if ( ! props.compiled ) { 
     console.warn('Did not connect to reducers before calling runProcesses, building the process now')
-    buildProcess(process)
+    buildProcess(proc)
   }
-  const { config = {} } = process
-  const SagaProcess = new process(config)
-  yield spawn(SagaProcess.__utils.init, process)
+  const { config = {} } = proc
+  const SagaProcess = new proc(config)
+  yield spawn(SagaProcess.__utils.init, proc)
 }
 
-const buildProcesses = (categories) => {
+function buildProcesses(categories) {
   if ( ! isObjLiteral(categories) ) { throw new Error('buildProcesses expects an object') }
   const processes = {
     reducers: {},
@@ -44,15 +47,18 @@ const buildProcesses = (categories) => {
   }
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
-    if ( typeof category !== 'object' ) { continue }
+    if ( 
+      processName(category) !== 'Process' &&
+      typeof category !== 'object' 
+    ) { continue }
     if ( processName(category) === 'Process' ) {
-      const compiled = buildProcess(process)
+      const compiled = buildProcess(category)
       parseCompiledProcess(compiled, processes)
     } else {
       for ( const processID in category ) {
-        const process = category[processID]
-        if ( processName(process) === 'Process' ) {
-          const compiled = buildProcess(process)
+        const proc = category[processID]
+        if ( processName(proc) === 'Process' ) {
+          const compiled = buildProcess(proc)
           parseCompiledProcess(compiled, processes)
         }
       }
@@ -90,15 +96,15 @@ const buildProcesses = (categories) => {
   }
 }
 
-const buildProcess = process => {
+function buildProcess(proc) {
   const compiled = {}
   if ( ! props.compiled ) {
-    buildReducer(process, compiled)
-    buildSelectors(process, compiled)
-    buildActions(process, compiled)
-    mutateProcess(process, compiled)
+    buildReducer(proc, compiled)
+    buildSelectors(proc, compiled)
+    buildActions(proc, compiled)
+    mutateProcess(proc, compiled)
   }
-  compiled.initialState = process.initialState
+  compiled.initialState = proc.initialState
   return compiled
 }
 
@@ -126,6 +132,9 @@ const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
         } else {
           compiled.selectors[selector] = createSelector(...selectors[selector])
         }
+      } else if ( isObjLiteral(selectorValue) ) {
+        compiled.selectors[selector] = createStructuredSelector(selectors[selector])
+        
       } else { throw new Error('Process Selectors must be an array of selectors') }
     }
   }
@@ -177,7 +186,7 @@ const parseCompiledProcess = (compiled, processes) => {
       mergeReducers(compiled, processes)
     } else if ( name ) {
       processes.reducers[name]      = compiled.reducer.reducer
-      processes.initialState[name]  = compiled.initialState
+      processes.initialState[name]  = compiled.initialState || {}
     }
   }
 }

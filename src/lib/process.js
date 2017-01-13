@@ -15,13 +15,15 @@ class Process {
     this.state  = State
     
     this.task.classTasks = []
-    this.task.savedTasks = {}
+    this.task.roster     = {}
     
     this.__utils.init = this.__utils.init.bind(this)
     
+    this.task.create = this.task.create.bind(this)
     this.task.save   = this.task.save.bind(this)
     this.task.cancel = this.task.cancel.bind(this)
-    this.task.cancelCategory = this.task.cancelCategory.bind(this)
+    this.task.watch = this.task.watch.bind(this)
+    this.task.cleanup = this.task.cleanup.bind(this)
     this.task.cancelAll = this.task.cancelAll.bind(this)
     
     this.observable.create = this.observable.create.bind(this)
@@ -147,45 +149,99 @@ class Process {
     
   }
   
+ // yield* this.task.create('handlers', 'clicks', 'handleClick', action)
+  
   task = {
+    * create(category, id, callback, ...props) {
+      const task = yield fork([this, callback], ...props)
+      yield* this.task.save(task, category, id)
+      return task
+    },
+    /*
+      this.task.save(...)
+        Saves a task with a category and id. 
+    */
     * save(task, category, id) {
-      const prevTasks = this.task.savedTasks
-      if (prevTasks[category] && prevTasks[category][id]) {
-        console.warn('You must cancel a task before you set a new task with same category and id. We are cancelling it for you')
+      const roster = this.task.roster
+      // If we save a task that was already saved previously we 
+      // will cancel the previous task automatically. 
+      if ( roster[category] && roster[category][id] ) {
         yield apply(this, this.task.cancel, [ category, id ])
       }
-      this.task.savedTasks = {
-        ...prevTasks,
+      this.task.roster = {
+        ...roster,
         [category]: {
-          ...prevTasks[category],
+          ...roster[category],
           [id]: task
+        }
+      }
+      yield fork([this, this.task.watch], task, category, id, ['task', 'cleanup'], category, id)
+    },
+    /*
+      watchTask()
+        Register a callback that will be made with the "this" context attached
+        and as a redux-saga.  The callback will be made once the given tasks
+        promise (task.done) is resolved.  The callback will be made whether the 
+        task was cancelled or not.  The first prop sent to the callback will always 
+        include the status of the task.
+    */
+    * watch(task, category, id, callback, ...props) {
+      // Wait until the task has completed this includes any forks but
+      // not spawns.
+      if ( ! task || ! task.done ) {
+        console.error('[PROCESS] Task Watcher received an invalid task object: ', task)
+        return
+      }
+      try { yield task.done } finally {
+        let status
+        if (yield cancelled()) {
+          // Is extra logic needed for cancellation condition?
+          status = 'cancelled'
+        } else {
+          status = 'ok'
+        }
+        // Make the callback if the function is found, otherwise transmit
+        // a message to console
+        if ( ! callback ) { return }
+        if ( Array.isArray(callback) ) {
+          const fn = this[callback[0]] && this[callback[0]][callback[1]] 
+          if ( typeof fn === 'function' ) { yield apply(this, fn, [ status, ...props ]) }
+        } else if ( typeof this[callback] === 'function' ) {
+          yield apply(this, this[callback], [ status, ...props ])
+        } else if ( typeof callback === 'function' ) {
+          yield apply(this, callback, [ status, ...props])
+        } else { 
+          console.error('Function not found: ', callback) 
+        }
+      }
+    },
+    * cleanup(status, category, id) {
+      const roster = this.task.roster
+      if ( roster[category] && roster[category][id] ) {
+        delete this.task.roster[category][id]
+        if ( Object.keys(this.task.roster[category] === 0 ) ) {
+          delete this.task.roster[category]
         }
       }
     },
     * cancel(category, id) {
-      if (this.task.savedTasks[category] && this.task.savedTasks[category][id]) {
-        const task = this.task.savedTasks[category][id]
-        if (task.isRunning()) {
-          yield cancel(task)
+      let task
+      if ( this.task.roster[category] ) {
+        if ( id && this.task.roster[category][id] ) {
+          task = this.task.roster[category][id]
+        } else if ( ! id ) {
+          const ids = Object.keys(this.task.roster[category])
+          for (const id of ids) {
+            yield fork([this, this.task.cancel], category, id)
+          }
         }
-      } else {
-        console.warn('Attempted to cancel a task that doesnt exist', category, id)
-      }
-    },
-    * cancelCategory(category) {
-      if (this.task.savedTasks[category]) {
-        const ids = Object.keys(this.task.savedTasks[category])
-        for (const id of ids) {
-          yield apply(this, this.task.cancel, [ category, id ])
-        }
-      } else {
-        console.warn('Attempted to cancel tasks of a category that doesnt exist', category)
+        if (task && task.isRunning()) { yield cancel(task) }
       }
     },
     * cancelAll() {
-      const categories = Object.keys(this.task.savedTasks)
+      const categories = Object.keys(this.task.roster)
       for (const category of categories) {
-        yield apply(this, this.task.cancelCategory, [ category ])
+        yield apply(this, this.task.cancel, [ category ])
       }
     }
   };
@@ -229,14 +285,14 @@ class Process {
     }
   };
 
-  * select(selector) {
+  * select(selector, props) {
     let results
     if ( 
       typeof selector === 'string' && 
       this.__utils.selectors &&
       Object.keys(this.__utils.selectors).includes(selector)
     ) {
-      return yield select(this.__utils.selectors[selector])
+      return yield select(this.__utils.selectors[selector], props)
     } else if ( typeof selector === 'function' ) {
       return yield select(selector)
     } else if ( Array.isArray(selector) ) {
