@@ -459,6 +459,8 @@ In addition to the static properties, process contains special API helpers
 that can be used within your process to make some patterns easier to work with
 and maintain.
 
+> More Information Coming Soon...
+
 ***
 
 ## Process Task System
