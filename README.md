@@ -470,6 +470,7 @@ your tasks.
 Here are a few key points about the Task API:
 
 - Tasks are given a `category` and `id` when created
+- If a task with the same `category` and `id` is created, the previous is automatically cancelled.
 - You can cancel a task by its `category` and `id`
 - You can cancel all tasks in a `category`
 - You can cancel all tasks 
