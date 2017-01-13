@@ -585,6 +585,90 @@ More Information Coming Soon...
 
 ***
 
+# Reducer Generators
+
+Internally we use ```reducer generators``` to build reducers which reduce reducers. 
+This allows us to filter actions into our methods efficiently and allows us to build much 
+of the syntax we use for the static properties such as ```actionRoutes```.  You can 
+import these and use them elsewhere if desired.
+
+```javascript
+import { reducerReducer, arrayMapReducer, objectMapReducer } from 'redux-saga-process/generators'
+```
+
+***
+
+### objectMapReducer(initialState, handlers, context)
+
+Reduces an object with types as their keys and reducers as their values.
+
+```javascript
+const reducer = objectMapReducer(
+  { foo: 'bar' },
+  {
+    'MY_TYPE': (state, action) => ({
+      ...state,
+      key: action.value
+    }),
+    'ANOTHER_TYPE': (state, action) => ({
+      ...state,
+      another: action.value
+    })
+  }
+)
+```
+
+***
+
+### arrayMapReducer(initialState, reducerArray, context)
+
+Reduces an array of reducers.  
+
+```javascript
+const reducer = arrayMapReducer(
+  { foo: 'bar' }, // initialState
+  [
+    (state, action, context) => {
+      /* reducer here */
+      return state
+    },
+    (state, action, context) => {
+      /* reducer here */
+      return state
+    }
+  ],
+  { shared: 'data' }
+)
+```
+
+***
+
+### reducerReducer(initialState, reducer, context)
+
+A reducer which reduces a reducer.  The main purpose of this generator is to allow us 
+to inject information into the reducer before executing.  This is mostly used internally 
+but you may find a use for it.
+
+```javascript
+reducerReducer(
+  { foo: 'bar' }, // initialState
+  (state, action, context) => {
+    switch(action.type) {
+      case 'MY_TYPE':
+        return {
+          ...state,
+          key: action.value
+        }
+      default:
+        return state
+    }
+  },
+  { shared: 'data' } // context
+)
+```
+
+***
+
 ### Special Thanks & Inspirations
 
 - **Dan Abramov [@gaearon](https://github.com/gaearon)** - Because it's the cool thing to do to thank him and obviously because of his endless contributions to the community including [redux](https://github.com/reactjs/redux) which is what this package is based upon (obviously).

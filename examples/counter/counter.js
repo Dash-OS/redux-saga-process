@@ -68,10 +68,6 @@ export default class CounterProcess extends Process {
       console.log(`[LOG] COUNTER ${id}: ${yield* this.select('getCounter')}`)
   }
   
-  * sessionCounter() {
-    
-  }
-
   /*
     Console should show:
     ------------------------
