@@ -523,7 +523,14 @@ yield* this.task.cancel('category')
 ### this.task.watch()
 
 ```javascript
-yield* this.task.watch('category', 'taskID', 'onComplete', 'foo', 'bar')
+* startWatch() {
+  const foo = 'foo', bar = 'bar'
+  yield* this.task.watch('category', 'taskID', 'onComplete', foo, bar)
+}
+
+* onComplete(foo, bar) {
+  // foo === 'foo', bar === 'bar'
+}
 ```
 
 ***
