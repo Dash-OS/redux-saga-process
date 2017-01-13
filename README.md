@@ -453,11 +453,7 @@ class MyProcess extends Process {
 }
 ```
 
-***
-
 # Process API
-
-***
 
 In addition to the static properties, process contains special API helpers
 that can be used within your process to make some patterns easier to work with
@@ -467,19 +463,33 @@ and maintain.
 
 ## Process Task System
 
-### this.task.create()
-
-### this.task.save()
-
-### this.task.cancel()
-
-### this.task.watch()
-
-### this.task.cancelAll()
+Information Coming Soon
 
 ***
 
+### this.task.create()
+
+***
+
+### this.task.save()
+
+***
+
+### this.task.cancel()
+
+***
+
+### this.task.watch()
+
+***
+
+### this.task.cancelAll()
+
 ## Process Observables
+
+Information Coming Soon
+
+***
 
 ### this.observable.create()
 
