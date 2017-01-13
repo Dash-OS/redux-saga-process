@@ -463,31 +463,108 @@ and maintain.
 
 ## Process Task System
 
-Information Coming Soon
+Tasks are essential to building powerful & asynchronous workflows within your 
+projects.  With the ```Process Task API``` it is simple to manage and maintain 
+your tasks. 
+
+Here are a few key points about the Task API:
+
+- Tasks are given a `category` and `id` when created
+- You can cancel a task by its `category` and `id`
+- You can cancel all tasks in a `category`
+- You can cancel all tasks 
+- You can register callbacks to occur when a task is complete
+
+> ***Note:*** This API is really a convenience wrapper around the ```redux-saga``` 
+> [task](https://redux-saga.github.io/redux-saga/docs/api/index.html#task) system 
+> implemented using their [fork](https://redux-saga.github.io/redux-saga/docs/api/index.html#forkfn-args) 
+> feature.  
 
 ***
 
 ### this.task.create()
 
+```javascript
+const prop1 = 'foo', prop2 = 'bar'
+yield* this.task.create('category', 'taskID', this.myTask, prop1, prop2)
+```
+
 ***
 
 ### this.task.save()
+
+```javascript
+const task = yield fork([this, this.myTask], prop1, prop2)
+yield* this.task.save(task, 'category', 'taskID')
+```
+
+***
+
+### this.task.task()
+
+```javascript
+const task     = yield* this.task.task('category', 'taskID')
+const category = yield* this.task.task('category')
+const all      = yield* this.task.task()
+```
 
 ***
 
 ### this.task.cancel()
 
+```javascript
+yield* this.task.cancel('category', 'taskID')
+// or
+yield* this.task.cancel('category')
+```
+
 ***
 
 ### this.task.watch()
+
+```javascript
+yield* this.task.watch('category', 'taskID', 'onComplete', 'foo', 'bar')
+```
 
 ***
 
 ### this.task.cancelAll()
 
+```javascript
+yield* this.task.cancelAll()
+```
+
 ## Process Observables
 
-Information Coming Soon
+Used to handle "push" events rather than "pull" events.  For example, we use 
+this API heavily for handling [Firebase](https://www.firebase.com) real-time 
+events within our processes.
+
+Observables include a buffer, a cancellable promise, and more.  We will add 
+more information about how these works as we can, but feel free to try them 
+out! 
+
+More Information Coming Soon...
+
+```javascript
+* observer(ref, type, id) {
+  const { getNext, onData } = this.observable.create(id)
+  const observerID = ref.on(type, onData)
+  try {
+    while (true) {
+      const data = yield call(getNext)
+      yield fork([this, this.processReceived], data)
+    }
+  } catch(error) {
+    console.warn('Catch Called in Observer', error.message)
+  } finally {
+    if (yield cancelled()) {
+      console.log('Observable Cancelled')
+      ref.off(type, observerID)
+    }
+  }
+}
+```
 
 ***
 
