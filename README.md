@@ -467,8 +467,6 @@ and maintain.
 
 ## Process Task System
 
-***
-
 ### this.task.create()
 
 ### this.task.save()
@@ -482,8 +480,6 @@ and maintain.
 ***
 
 ## Process Observables
-
-***
 
 ### this.observable.create()
 
