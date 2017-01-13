@@ -482,7 +482,7 @@ Here are a few key points about the Task API:
 
 ***
 
-### this.task.create()
+### this.task.create(category, id)
 
 ```javascript
 const prop1 = 'foo', prop2 = 'bar'
@@ -491,7 +491,7 @@ yield* this.task.create('category', 'taskID', this.myTask, prop1, prop2)
 
 ***
 
-### this.task.save()
+### this.task.save(Task, category, id)
 
 ```javascript
 const task = yield fork([this, this.myTask], prop1, prop2)
@@ -500,7 +500,7 @@ yield* this.task.save(task, 'category', 'taskID')
 
 ***
 
-### this.task.task()
+### this.task.task(category, id)
 
 ```javascript
 const task     = yield* this.task.task('category', 'taskID')
@@ -510,7 +510,7 @@ const all      = yield* this.task.task()
 
 ***
 
-### this.task.cancel()
+### this.task.cancel(category, id)
 
 ```javascript
 yield* this.task.cancel('category', 'taskID')
@@ -520,7 +520,7 @@ yield* this.task.cancel('category')
 
 ***
 
-### this.task.watch()
+### this.task.watch(category, id, callback, ...props)
 
 ```javascript
 * startWatch() {
