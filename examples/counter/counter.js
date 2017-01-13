@@ -1,20 +1,15 @@
-import { delay } from 'redux-saga'
 import { put } from 'redux-saga/effects'
 import Process from 'redux-saga-process'
 
-import { INCREMENT, DECREMENT, EXPR, RESET, LOGGING } from './types'
+import { INCREMENT, DECREMENT, RESET, LOGGING } from './types'
 
 export default class CounterProcess extends Process {
 
   // Set the default logging setting
   logging = false;
 
-  // Builds a reducer to reduce "counters" in our store.
   static config = { reduces: 'counters' };
 
-  // Builds actions that we can dispatch easily
-  // yield* this.dispatch('increment', 5, 'myCounter') -->
-  //    { type: 'INCREMENT', by: 5, id: 'myCounter' }
   static actions = {
     reset:     null,
     logging:   [ 'enabled' ],
@@ -22,8 +17,6 @@ export default class CounterProcess extends Process {
     decrement: [ 'by', 'id' ]
   };
 
-  // Creates reselect selectors to get a specific counter or get 
-  // the entire counters object from the store.
   static selectors = {
     getCounter: [
       (state, id = '_default') => state[id]
@@ -31,7 +24,6 @@ export default class CounterProcess extends Process {
     getCounters: [ state => state ]
   };
 
-  // Our reducer for the counters store
   static reducer = {
     [INCREMENT]: (state, { id = '_default', by = 1 }) => ({
       ...state,
@@ -47,14 +39,11 @@ export default class CounterProcess extends Process {
     })
   };
 
-  // Whenever these types are seen, trigger the given method.  In this
-  // case we want to trigger the "log" method to log the result (so-long as 
-  // logging is enabled).
   static actionRoutes = {
-    [LOGGING]:   'setLogging',
     [INCREMENT]: 'log',
     [DECREMENT]: 'log',
     [RESET]:     'log',
+    [LOGGING]:   'setLogging'
   };
 
   * setLogging({ enabled }) {
@@ -67,7 +56,7 @@ export default class CounterProcess extends Process {
     this.logging &&
       console.log(`[LOG] COUNTER ${id}: ${yield* this.select('getCounter')}`)
   }
-  
+
   /*
     Console should show:
     ------------------------
