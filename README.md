@@ -38,6 +38,9 @@ your processes, and more.  See the overview and examples below to see how it all
 When I have the time I will try to add a gitbook for the documentation.  For now I will attempt
 to document everything you need to know here.
 
+> **Testing:** If you are wanting to run tests you will likely want / need to substitute 
+> many of the ```yield*``` calls with something like ```yield apply()```
+
 > **Note:** This package should be considered a work-in-progress and should be tested thoroughly 
 > at this point before using in your projects.  We just decoupled the whole package from our 
 > app(s) so some bugs may remain that need to be ironed out (although we haven't run into any with our 
