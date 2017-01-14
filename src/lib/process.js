@@ -1,7 +1,9 @@
 /* eslint-disable no-constant-condition */
 
 import {  CANCEL } from 'redux-saga'
-import { take, fork, put, cancel, call, race, apply, cancelled, select, delay } from 'redux-saga/effects'
+import { TASK } from 'redux-saga/utils'
+import { take, fork, put, cancel, call, race, apply, cancelled, select } from 'redux-saga/effects'
+import { delay } from 'redux-saga'
 
 function cancellablePromise(p, onCancel) {
   p[CANCEL] = onCancel // eslint-disable-line
@@ -22,7 +24,7 @@ class Process {
     this.task.create = this.task.create.bind(this)
     this.task.save   = this.task.save.bind(this)
     this.task.cancel = this.task.cancel.bind(this)
-    this.task.watch = this.task.watch.bind(this)
+    this.task.onComplete = this.task.onComplete.bind(this)
     this.task.task = this.task.task.bind(this)
     this.task.cleanup = this.task.cleanup.bind(this)
     this.task.cancelAll = this.task.cancelAll.bind(this)
@@ -140,11 +142,7 @@ class Process {
         console.error(`${name} Error: e.message`)
         throw new Error(e)
       }
-      for (const task of this.task.classTasks) {
-        if (task.isRunning()) {
-          yield cancel(task)
-        }
-      }
+      yield this.task.classTasks.map(cancel)
       this.task.classTasks = []
     }
     
@@ -176,7 +174,7 @@ class Process {
           [id]: task
         }
       }
-      yield fork([this, this.task.watch], category, id, ['task', 'cleanup'], category, id)
+      yield fork([this, this.task.onComplete], category, id, ['task', 'cleanup'], category, id)
     },
     * task(category, id) {
       if ( ! id && this.task.roster[category] ) {
@@ -188,17 +186,16 @@ class Process {
       }
     },
     /*
-      watchTask()
+      onComplete()
         Register a callback that will be made with the "this" context attached
         and as a redux-saga.  The callback will be made once the given tasks
         promise (task.done) is resolved.  The callback will be made whether the 
         task was cancelled or not.
     */
-    * watch(category, id, callback, ...props) {
+    * onComplete(category, id, callback, ...props) {
       // Wait until the task has completed this includes any forks but
       // not spawns.
       const task = yield* this.task.task(category, id)
-      console.log('Task: ', task['@@redux-saga/TASK'])
       if ( ! task || ! task.done ) {
         console.error('[PROCESS] Task Watcher received an invalid task object: ', task)
         return
@@ -235,9 +232,10 @@ class Process {
         // Should we warn about the task not existing?
         return
       }
-      if (task && task['@@redux-saga/TASK'] && task.isRunning()) { 
+      console.log(TASK)
+      if (task && task[TASK] && task.isRunning()) { 
         yield cancel(task) 
-      } else if ( task && ! task['@@redux-saga/TASK'] ) {
+      } else if ( task && ! task[TASK] ) {
         const ids = Object.keys(task)
         for (const id of ids) {
           yield fork([this, this.task.cancel], category, id)

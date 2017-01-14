@@ -48,7 +48,7 @@ to document everything you need to know here.
 
 ***
 
-<center><h3>Thoughts, Comments, Quesstions, Pull Requests welcome!</h3></center>
+<center><h3>Thoughts, Comments, Questions, Pull Requests welcome!</h3></center>
 
 ***
 
@@ -78,12 +78,9 @@ import * as processCategories from '../processes'
 const processes = buildProcesses(processCategories)
 ```
 
-
 > ***Note:*** Our ```../processes``` directory contains an index which exports "process categories." 
 > when you build your processes, the library will search up to two levels deep for classes that can be 
 > built and build any discovered processes.
-
-
 
 ***
 
@@ -583,7 +580,6 @@ More Information Coming Soon...
 
 ### this.observable.create()
 
-***
 
 # Process Context ```(Experimental)```
 
