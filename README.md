@@ -523,12 +523,12 @@ yield* this.task.cancel('category')
 
 ***
 
-### this.task.watch(category, id, callback, ...props)
+### this.task.onComplete(category, id, callback, ...props)
 
 ```javascript
-* startWatch() {
+* registerCallback() {
   const foo = 'foo', bar = 'bar'
-  yield* this.task.watch('category', 'taskID', 'onComplete', foo, bar)
+  yield* this.task.onComplete('category', 'taskID', 'onComplete', foo, bar)
 }
 
 * onComplete(foo, bar) {
