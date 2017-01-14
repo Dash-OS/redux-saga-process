@@ -1,9 +1,8 @@
 /* eslint-disable no-constant-condition */
 
-import {  CANCEL } from 'redux-saga'
+import {  CANCEL, delay } from 'redux-saga'
 import { TASK } from 'redux-saga/utils'
 import { take, fork, put, cancel, call, race, apply, cancelled, select } from 'redux-saga/effects'
-import { delay } from 'redux-saga'
 
 function cancellablePromise(p, onCancel) {
   p[CANCEL] = onCancel // eslint-disable-line
