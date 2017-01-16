@@ -4,6 +4,11 @@ import {  CANCEL, delay } from 'redux-saga'
 import { TASK } from 'redux-saga/utils'
 import { take, fork, put, cancel, call, race, apply, cancelled, select } from 'redux-saga/effects'
 
+import { isReduxType, toReduxType, props as processProps, isObjLiteral } from './helpers'
+import { Wildcard, hasWildcard } from './wildcard'
+
+const WC = processProps.wildcardMatch && new Wildcard()
+
 function cancellablePromise(p, onCancel) {
   p[CANCEL] = onCancel // eslint-disable-line
   return p
@@ -36,19 +41,21 @@ class Process {
   
   __utils = {
     refs: {},
+    
     * init(target) {
-      this.name = this.name || target.name || 'ANONYMOUS_SAGA_PROCESS'
-      const staticsTask = yield fork([ this, this.__utils.checkStatics ], target)
+      this.name = this.name || target.name || 'ANONYMOUS_PROCESS'
+      const staticsTask = yield fork([ this, this.__utils.startProcessMonitor ], target)
       let startTask
       if (typeof this.processStarts === 'function') {
         startTask = yield fork([this, this.processStarts])
       }
       this.task.classTasks.push(staticsTask, startTask)
     },
-    getPattern(_types) {
+    
+    getPattern(_types, config) {
       const patterns = []
       let types, isObject
-      if (Array.isArray(_types) === false && typeof _types === 'object') {
+      if (isObjLiteral(_types)) {
         types = Object.keys(_types)
         isObject = true
       } else {
@@ -57,42 +64,45 @@ class Process {
       }
   
       if (types === undefined || types.length === 0) {
-        return '_DONT_MONITOR_TYPE_'
+        return '@@_PROCESS_DONT_MONITOR_TYPE_'
       }
   
       for (const type of types) {
+        const wildcardMatch = processProps.wildcardMatch && hasWildcard(type)
+        if ( wildcardMatch ) { config.wildcard = true }
         let fn
         const params = isObject ? _types[type] : _types
         switch (typeof params) {
-          case 'string':
-            fn = action => action.type === type
+          case 'string': {
+            fn = wildcardMatch
+              ? action => WC.pattern(type).match(action.type)
+              : action => action.type === type
             patterns.push(fn)
             break
-  
-          case 'object':
+          }
+          case 'object': {
+            let fn
             if (Array.isArray(type)) {
-              console.error(`Array is not supported type`)
-              break
+              fn = wildcardMatch
+                ? action => WC.pattern(type).match(action.type)
+                : action => action.type
+            } else {
+              fn = action => Object.keys(type).every(x => type[x] === action[x])
             }
-            fn = action => Object.keys(type).every(x => type[x] === action[x])
             patterns.push(fn)
             break
-  
+          }
           case 'function':
             patterns.push(fn)
             break
-  
           default:
             console.error(`Unsupported type ${type}`)
         }
       }
       return action => patterns.some(func => func(action))
     },
-    /*
-      __utils.checkStatics
-        Checks the static properties that we have received
-    */
-    * checkStatics(target) {
+    
+    * startProcessMonitor(target) {
       const {
         actions,
         types,
@@ -102,50 +112,89 @@ class Process {
         name
       } = target
   
-      const monitorPattern = this.__utils.getPattern(actionRoutes),
-            cancelPattern  = this.__utils.getPattern(cancelTypes)
-      
+      const config = { wildcard: false }
+      const monitorPattern = actionRoutes && this.__utils.getPattern(actionRoutes, config) || '@@_PROCESS_DONT_MONITOR_TYPE_',
+            cancelPattern  = cancelTypes  && this.__utils.getPattern(cancelTypes) || '@@_PROCESS_DONT_MONITOR_TYPE_'
+            
       this.__utils.selectors = selectors
       this.__utils.actions   = actions
-      if ( types ) { this.types = types }
+      this.__utils.target = target
+      
+      if ( monitorPattern === '@@_PROCESS_DONT_MONITOR_TYPE_' && cancelPattern === '@@_PROCESS_DONT_MONITOR_TYPE_') {
+        //console.info(name, ' process does not monitor anything and will be killed when it completes its lifecycle')
+        return
+      }
       
       try {
         let stopCheck
-        while (!stopCheck) {
-          const { monitorAction, stopAction } = yield race({
+        while ( ! stopCheck ) {
+          const { monitorAction, cancelAction } = yield race({
             monitorAction: take(monitorPattern),
-            cancelAction: take(cancelPattern)
+            cancelAction:  take(cancelPattern)
           })
           if (monitorAction) {
-            const route = actionRoutes[monitorAction.type]
-            if (typeof this[route] !== 'function') {
-              console.error(`${name}'s Action Route ${route} is not a function`)
-              continue
-            }
-            const task = yield fork([this, this[route]], monitorAction)
-            //this.task.classTasks.push(task)
+            yield fork([this, this.__utils.handleMonitorExecution], monitorAction, config)
             continue
-          }
-          if (stopAction) {
-            if (typeof this.shouldProcessCancel === 'function') {
-              stopCheck = yield apply(this, this.shouldProcessCancel, [ stopAction ])
-            } else { stopCheck = true }
-            if (stopCheck) {
-              if (typeof this.processCancels === 'function') {
-                yield apply(this, this.processCancels, [ stopAction ])
-              }
-            }
+          } else if (cancelAction) {
+            stopCheck = yield apply(this, this.__utils.handleCancelExecution, [ cancelAction, config ])
           }
         }
       } catch (e) {
-        console.error(`${name} Error: e.message`)
+        console.error(`Process ${name} Error Occurred: e.message`)
         throw new Error(e)
       }
-      yield this.task.classTasks.map(cancel)
+      for ( let classTask of this.task.classTasks ) {
+        try {
+          yield cancel(classTask)
+        } catch (e) {
+          console.error('Error while Cancelling a Task: ', e.message, classTask)
+        }
+      }
       this.task.classTasks = []
-    }
+    },
+    
+    * handleMonitorExecution(action, config = {}) {
+      const { actionRoutes, name } = this.__utils.target
+      const route = actionRoutes[action.type]
+      if (typeof this[route] !== 'function' ) {
+        if ( ! config.wildcard ) {
+          console.error(`${name}'s Action Route ${route} is not a function`)
+          return
+        }
+      } else {
+        yield fork([this, this[route]], action)
+      }
+      if ( config.wildcard && this.config.matchWildcard !== false ) {
+        const matches = WC.pattern(actionRoutes).search(action.type)
+        for ( let match in matches ) {
+          const fn = matches[match]
+          if ( typeof this[fn] !== 'function' ) {
+            console.error(`${name}'s Action Route ${route} is not a function`)
+            continue
+          } else {
+            yield fork([this, this[fn]], action)
+          }
+        }
+      }
+    },
+    
+    * handleCancelExecution(action, config = {}) {
+      var stopCheck = true
+      if (typeof this.shouldProcessCancel === 'function') {
+        stopCheck = yield apply(this, this.shouldProcessCancel, [ action ])
+      } else { stopCheck = true }
+      if (stopCheck) {
+        if (typeof this.processWillCancel === 'function') {
+          const override = yield apply(this, this.processWillCancel, [ action ])
+          if ( override === false ) { stopCheck = override }
+        }
+      }
+      return stopCheck
+    },
     
   }
+  
+  
   
  // yield* this.task.create('handlers', 'clicks', 'handleClick', action)
   
@@ -231,7 +280,6 @@ class Process {
         // Should we warn about the task not existing?
         return
       }
-      console.log(TASK)
       if (task && task[TASK] && task.isRunning()) { 
         yield cancel(task) 
       } else if ( task && ! task[TASK] ) {
@@ -308,6 +356,8 @@ class Process {
       this.config && this.config.reduces
     ) {
       return yield select(state => state[this.config.reduces][selector])
+    } else if ( ! selector ) {
+      return yield select(state => state[this.config.reduces])
     }
     return results
   }

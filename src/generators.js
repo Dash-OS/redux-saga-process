@@ -2,5 +2,6 @@
 export {
   reducerReducer,
   arrayMapReducer,
-  objectMapReducer
+  objectMapReducer,
+  wildcardMapReducer
 } from './lib/reducerGenerators'

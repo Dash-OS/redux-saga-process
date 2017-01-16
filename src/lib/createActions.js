@@ -1,5 +1,4 @@
-const toReduxType = str => str.replace(/(?!^)([A-Z])/g, '_$1').toUpperCase()
-const isObjLiteral = o => ( o !== null && ! Array.isArray(o) && typeof o !== 'function' && typeof o === 'object' )
+import { isObjLiteral, toReduxType } from './helpers'
 
 const buildTypes = types => {
   const compiled = {}
@@ -37,7 +36,6 @@ const buildActions = (actions) => {
 const createActions = actions => {
   if ( ! actions ) { throw new Error('No Actions Received') }
   const _types = Object.keys(actions), _actions = Object.values(actions)
-  
   const TYPES   = buildTypes(_types),
         ACTIONS = buildActions(actions)
   return { TYPES, ACTIONS }

@@ -3,7 +3,8 @@ import { createActions } from './createActions'
 import { createSelector, createStructuredSelector } from 'reselect'
 import * as generate from './reducerGenerators'
 
-const props = { compiled: false, mergeReducers: true }
+import { isReduxType, toReduxType, isObjLiteral, props } from './helpers'
+import { hasWildcard } from './wildcard'
 
 const PROCESS_CONTEXT = {
   actions:   {},
@@ -12,7 +13,6 @@ const PROCESS_CONTEXT = {
 }
 
 const processName  = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
-const isObjLiteral = o => ( o !== null && ! Array.isArray(o) && typeof o !== 'function' && typeof o === 'object' )
 
 function processContext(what) {
   if ( ! what ) { return PROCESS_CONTEXT }
@@ -56,6 +56,7 @@ function buildProcesses(categories) {
     initialState: {},
     context: {},
   }
+  
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
     if ( 
@@ -75,6 +76,14 @@ function buildProcesses(categories) {
       }
     }
   }
+  
+  const buildObjectMapReducer = (reducerName, reducer, initialState, ctx) => {
+    processes.reducers[reducerName] = 
+      props.wildcardMatch && hasWildcard(reducer)
+        ? generate.wildcardMapReducer(initialState, reducer, ctx)
+        : generate.objectMapReducer(initialState, reducer, ctx)
+  }
+  
   for ( const reducerName in processes.reducers ) {
     const reducer = processes.reducers[reducerName]
     if ( typeof reducer === 'function' ) {
@@ -82,13 +91,15 @@ function buildProcesses(categories) {
     } else if ( Array.isArray(reducer) ) {
       processes.reducers[reducerName] = generate.arrayMapReducer(
         processes.initialState[reducerName],
-        reducer.map(r => generate.objectMapReducer(undefined, r, undefined)),
+        reducer.map(r => 
+          buildObjectMapReducer(reducerName, r, undefined, r,undefined)
+        ),
         processes.context[reducerName]
       )
     } else if ( isObjLiteral(reducer) ) {
-      processes.reducers[reducerName] = generate.objectMapReducer(
+      buildObjectMapReducer(
+        reducerName, reducer, 
         processes.initialState[reducerName],
-        reducer,
         processes.context[reducerName]
       )
     } else if ( typeof reducer === 'function' ) {
@@ -113,6 +124,7 @@ function buildProcess(proc) {
     buildReducer(proc, compiled)
     buildSelectors(proc, compiled)
     buildActions(proc, compiled)
+    buildActionRoutes(proc, compiled)
     mutateProcess(proc, compiled)
   } else {
     /* Already compiled this process, return compiled data */
@@ -128,9 +140,21 @@ function buildProcess(proc) {
 
 const buildReducer = ({ config = {}, initialState, reducer }, compiled = {}) => {
   if ( config.reduces ) {
-    compiled.reducer = {
-      name: config.reduces,
-      reducer,
+    let name
+    if ( Array.isArray(config.reduces) ) {
+      name = config.reduces[0]
+    } else { name = config.reduces }
+    compiled.reducer = { name, reducer: {} }
+    if ( Array.isArray(config.reducer) ) {
+      compiled.reducer.context = { path: config.reduces[1] }
+    }
+    if ( typeof reducer === 'function' ) {
+      compiled.reducer.reducer = reducer
+    } else if ( isObjLiteral(reducer) ) {
+      for ( const type in reducer ) {
+        const key = toReduxType(type)
+        compiled.reducer.reducer[key] = reducer[type]
+      }
     }
     compiled.initialState = isObjLiteral(initialState) ?
       Object.assign({}, initialState) : initialState
@@ -159,8 +183,8 @@ const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
   return compiled
 }
 
-const buildActions = (process, compiled = {}) => {
-  const creators = process.actionCreators || process.actions
+const buildActions = (proc, compiled = {}) => {
+  const creators = proc.actionCreators || proc.actions
   const actions = creators && createActions(creators)
   if ( actions ) { 
     compiled.actions = actions.ACTIONS 
@@ -169,11 +193,21 @@ const buildActions = (process, compiled = {}) => {
   return compiled
 }
 
+const buildActionRoutes = (proc, compiled = {}) => {
+  const actionRoutes = proc.actionRoutes
+  if ( ! actionRoutes ) { return compiled }
+  compiled.actionRoutes = {}
+  for (let route in actionRoutes) {
+    compiled.actionRoutes[toReduxType(route)] = actionRoutes[route]
+  }
+}
+
 const mutateProcess = (process, compiled) => {
-  if ( compiled.reducer )   { process.reducer   = compiled.reducer   }
-  if ( compiled.actions   ) { process.actions   = compiled.actions   }
-  if ( compiled.selectors ) { process.selectors = compiled.selectors }
-  if ( compiled.types )     { process.types     = compiled.types     }
+  if ( compiled.reducer )      { process.reducer   = compiled.reducer   }
+  if ( compiled.actions   )    { process.actions   = compiled.actions   }
+  if ( compiled.selectors )    { process.selectors = compiled.selectors }
+  if ( compiled.types )        { process.types     = compiled.types     }
+  if ( compiled.actionRoutes ) { process.actionRoutes = compiled.actionRoutes }
 }
   
 const mergeReducers = (compiled, processes) => {
@@ -208,7 +242,7 @@ const parseCompiledProcess = (compiled, processes) => {
       processes.initialState[name]  = compiled.initialState || {}
     }
   }
-  if ( ! compiled.cached ) {
+  if ( ! compiled.cached && props.useContext ) {
     /* If we are returning cached data no need to merge into the global context */
     if ( compiled.actions ) {
       PROCESS_CONTEXT.actions = {
@@ -229,7 +263,6 @@ const parseCompiledProcess = (compiled, processes) => {
       }
     }
   }
-  
 }
 
 export { runProcesses, runProcess, buildProcesses, processName, processContext }

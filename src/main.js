@@ -15,3 +15,8 @@ export {
 export { 
   default as default 
 } from './lib/process'
+
+export {
+  Wildcard,
+  hasWildcard
+} from './lib/wildcard'
