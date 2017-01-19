@@ -3,5 +3,6 @@ export {
   reducerReducer,
   arrayMapReducer,
   objectMapReducer,
-  wildcardMapReducer
+  nestedObjectMapReducer,
+  objectWildcardMapReducer,
 } from './lib/reducerGenerators'

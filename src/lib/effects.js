@@ -26,18 +26,25 @@ function* runProcesses(categories) {
       processName(category) !== 'Process' &&
       typeof category !== 'object' 
     ) { continue }
-    if ( processName(category) === 'Process' ) {
-      yield fork(runProcess, category)
+    if ( processName(category) === 'Process') {
+      isProcessActive(category) && ( yield fork(runProcess, category) )
     } else {
       for ( const processID in category ) {
-        const process = category[processID]
-        if ( processName(process) === 'Process' ) {
-          yield fork(runProcess, process)
+        const proc = category[processID]
+        if ( processName(proc) === 'Process' ) {
+          isProcessActive(proc) && ( yield fork(runProcess, proc) )
         } else { continue }
       }
     }
   }
 }
+
+const isProcessActive = ({ config = {} }) => (
+     config.active === false
+  || process.env.IS_NODE === true && config.ssr === false
+    ? false
+    : true
+)
 
 function* runProcess(proc) {
   if ( ! props.compiled ) { 
@@ -50,13 +57,16 @@ function* runProcess(proc) {
 }
 
 function buildProcesses(categories) {
+  if ( process.env.IS_NODE === true && props.ssr === false ) {
+    console.info('Processes have been set to only run on the client, cancelling build')
+    return
+  }
   if ( ! isObjLiteral(categories) ) { throw new Error('buildProcesses expects an object') }
   const processes = {
     reducers: {},
     initialState: {},
     context: {},
   }
-  
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
     if ( 
@@ -64,13 +74,15 @@ function buildProcesses(categories) {
       typeof category !== 'object' 
     ) { continue }
     if ( processName(category) === 'Process' ) {
-      const compiled = buildProcess(category)
+      const compiled = isProcessActive(category) && buildProcess(category)
+      if ( ! compiled ) { continue }
       parseCompiledProcess(compiled, processes)
     } else {
       for ( const processID in category ) {
         const proc = category[processID]
         if ( processName(proc) === 'Process' ) {
-          const compiled = buildProcess(proc)
+          const compiled = isProcessActive(proc) && buildProcess(proc)
+          if ( ! compiled ) { continue }
           parseCompiledProcess(compiled, processes)
         }
       }
@@ -263,6 +275,7 @@ const parseCompiledProcess = (compiled, processes) => {
       }
     }
   }
+  
 }
 
 export { runProcesses, runProcess, buildProcesses, processName, processContext }

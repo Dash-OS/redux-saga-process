@@ -3,20 +3,25 @@ export {
   runProcesses, 
   runProcess,
   buildProcesses,
-  processContext
+  processContext,
+  
 } from './lib/effects'
 
 export {
+  toReduxType,
+  configProcess
+} from './lib/helpers'
+
+export {
   createActions, 
-  toReduxType, 
   buildCreator
 } from './lib/createActions'
-
-export { 
-  default as default 
-} from './lib/process'
 
 export {
   Wildcard,
   hasWildcard
 } from './lib/wildcard'
+
+export { 
+  default as default 
+} from './lib/process'

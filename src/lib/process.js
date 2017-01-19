@@ -18,7 +18,7 @@ class Process {
   
   constructor(config, State) {
     this.config = config
-    this.state  = State
+    this.state  = State || {}
     
     this.task.classTasks = []
     this.task.roster     = {}
@@ -194,8 +194,6 @@ class Process {
     
   }
   
-  
-  
  // yield* this.task.create('handlers', 'clicks', 'handleClick', action)
   
   task = {
@@ -224,6 +222,7 @@ class Process {
       }
       yield fork([this, this.task.onComplete], category, id, ['task', 'cleanup'], category, id)
     },
+    
     * task(category, id) {
       if ( ! id && this.task.roster[category] ) {
         return this.task.roster[category]
@@ -281,7 +280,7 @@ class Process {
         return
       }
       if (task && task[TASK] && task.isRunning()) { 
-        yield cancel(task) 
+        yield cancel(task)
       } else if ( task && ! task[TASK] ) {
         const ids = Object.keys(task)
         for (const id of ids) {
@@ -314,7 +313,9 @@ class Process {
   
       const onCancel = () => {
         delete this.observable[observerRef]
-        handleCancel(...cancelArgs, name)
+        if ( typeof handleCancel === 'function' ) {
+          handleCancel(...cancelArgs, name).bind(this)
+        }
       }
   
       return {
@@ -372,6 +373,13 @@ class Process {
     } else if ( action && action.type ) {
       yield put(action)
     } else { throw new Error('Must dispatch either a registered action or a valid redux action object.') }
+  }
+  
+  * setState(state) {
+    this.state = {
+      ...this.state,
+      ...state
+    }
   }
 
 }

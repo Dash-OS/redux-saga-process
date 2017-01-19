@@ -1,5 +1,21 @@
 import { Wildcard } from './wildcard'
 
+// const WC = new Wildcard()
+//   .logic('and')
+//   .case(false)
+//   .pattern({ 'NETWORK*': 'yes', 'FOO': 'no', '*REQUEST': 'ok' })
+//   .search('network_request')
+//   //.filter('NETWORK_REQUEST')
+//   //.pattern('NETWORK*')
+//   //.filter({ 'NETWORK*': 'yes', 'FOO': 'no' })
+//   //.pattern({ 'NETWORK*': 'win', '*REQUEST': 'win', 'NO': 'fail' })
+//   //.pattern(['*NETWORK*', 'REQUEST', '*REQUEST'])
+//   //.pattern('*NETWORK*')
+//   //.filter(['One NETWORK', 'NETWORK', 'foo', 'bar', 'network'])
+//   //.filter(['NETWORK', 'REQUEST', 'FOO'])
+  
+// console.log(WC)
+
 const arrayMapReducer = 
   ( initialState, reducers, pcontext ) =>  ( state = initialState, action, context ) =>
   ( reducers.reduce( (p, c)  => c(p, action, { ...pcontext, ...context }), state ) )
