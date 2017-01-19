@@ -56,7 +56,7 @@ into any other app.  This should enable sharing of logic between your apps and/o
  most of the options available in use.  We specify this as a client-rendered process only, reduce part of our store, and observer push-style 
  events.  In use we do a bit more monitoring of different events, but stripped some of that out to make it more direct of an example.
 - [Action Logger](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/actionLogger/actionLogger.js) - A minimal process which simply 
-  logs any actions dispatched.
+  logs any actions dispatched.  
 
 ***
 
@@ -591,40 +591,6 @@ More Information Coming Soon...
 ***
 
 ### this.observable.create()
-
-
-# Process Context ```(Experimental)```
-
-> ***Note:*** This may not be available in future versions, it is provided 
-> at this time because its easy to do so.  We wanted a way to get some of the 
-> convenient data out of our processes without importing the processes all over 
-> the place to read their static properties.
-
-Process Context allows you to read a compiled & merged copy of the result of the 
-process build procedure.  This is a function which returns an object with the merged 
-selectors, types, and actions.  No care is taken to handle overlapping types, actions, 
-or selectors at this time.
-
-> Originally we organized them by reducer name, but we did not want reducers to be 
-> required if you wanted to build Processes which only handle actions or selectors, etc.
-
-> Would love some feedback as-to how we might achieve this in a better way!  It may end 
-> up being best to simply import the process directly.
-
-```javascript
-import React, { Component } from 'react'
-import { processContext } from 'redux-saga-process'
-const { types, selectors, actions } = processContext()
-
-@connect(state => ({
-  // selects state.counters (reselect selector)
-  myState: selectors.getCounters(state)
-}, {
-  // callAction dispatches { type: 'INCREMENT', by, id }
-  callAction: (by, id) => actions.increment(by, id) 
-})
-class MyComponent extends Component { /* Component */ }
-```
 
 # Reducer Generators
 
