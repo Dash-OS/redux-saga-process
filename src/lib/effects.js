@@ -40,7 +40,7 @@ function* runProcesses(categories) {
 }
 
 const isProcessActive = ({ config = {} }) => (
-     config.active === false
+     config.enabled === false
   || process.env.IS_NODE === true && config.ssr === false
     ? false
     : true
