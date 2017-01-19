@@ -46,6 +46,17 @@ to document everything you need to know here.
 > app(s) so some bugs may remain that need to be ironed out (although we haven't run into any with our 
 > tests at this time).
 
+## Examples 
+
+Here are a few examples of some simple processes which are being used today.  When built
+properly, a process should be a completely independent "module" which could be plugged 
+into any other app.  This should enable sharing of logic between your apps and/or each others.
+
+- [Network Monitor Process](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/networkMonitor/networkMonitor.js) - this shows 
+ most of the options available in use.  We specify this as a client-rendered process only, reduce part of our store, and observer push-style 
+ events.  In use we do a bit more monitoring of different events, but stripped some of that out to make it more direct of an example.
+
+
 ***
 
 <center><h3>Thoughts, Comments, Questions, Pull Requests welcome!</h3></center>
