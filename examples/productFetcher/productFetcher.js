@@ -1,7 +1,6 @@
 import Process from 'redux-saga-process'
 
 import { call } from 'redux-saga/effects'
-import { GET_PRODUCT, PRODUCT_DETAILS, REMOVE_PRODUCTS } from './types'
 
 /*
   ProductFetcherProcess
@@ -28,16 +27,16 @@ export default class ProductFetcherProcess extends Process {
   
   // Reduce the product details state when product data is received
   static reducer = {
-    [PRODUCT_DETAILS]: (state, action) => ({
+    productDetails: (state, action) => ({
       ...state,
       [action.productSKU]: action.data
     }),
-    [REMOVE_PRODUCTS]: (state, action) => ({})
+    removeProducts: (state, action) => ({})
   };
   
   // call * getProduct method whenever GET_PRODUCT is dispatched.
   static actionRoutes = {
-    [GET_PRODUCT]: 'getProduct'
+    getProduct: 'getProduct'
   };
   
   // yield* this.dispatch('removeProducts') dispatches
@@ -53,13 +52,15 @@ export default class ProductFetcherProcess extends Process {
   // the Process) and dispatch the product details when completed
   * getProduct({ type, productSKU, force, ...action }) {
     const now = Date.now()
-    if ( ! force && this.history[productSKU] && now - this.history[productSKU] < this.throttleTimeout ) {
+    if ( 
+       ! force && this.history[productSKU] 
+      && now - this.history[productSKU] < this.throttleTimeout 
+    ) {
       /* Only attempt fetch at most once every 30 seconds unless force = true */
       return
     }
     this.history[productSKU] = now
     const product = yield call(fetch(/*...fetch args...*/))
-    /* Normalize / Modify Product Data before dispatch? */
     if ( product && product.productSKU === productSKU ) {
       yield* this.dispatch('productDetails', productSKU, product)
     }

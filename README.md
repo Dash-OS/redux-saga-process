@@ -55,7 +55,8 @@ into any other app.  This should enable sharing of logic between your apps and/o
 - [Network Monitor Process](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/networkMonitor/networkMonitor.js) - this shows 
  most of the options available in use.  We specify this as a client-rendered process only, reduce part of our store, and observer push-style 
  events.  In use we do a bit more monitoring of different events, but stripped some of that out to make it more direct of an example.
-
+- [Action Logger](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/actionLogger/actionLogger.js) - A minimal process which simply 
+  logs any actions dispatched.
 
 ***
 

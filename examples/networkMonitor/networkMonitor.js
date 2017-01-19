@@ -1,4 +1,4 @@
-import Process from 'rsp/src/main'
+import Process from 'redux-saga-process'
 
 import { call, fork } from 'redux-saga/effects'
 
