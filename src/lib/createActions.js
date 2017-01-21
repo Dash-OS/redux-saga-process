@@ -3,8 +3,8 @@ import { isObjLiteral, toReduxType } from './helpers'
 const buildTypes = types => {
   const compiled = {}
   for ( let type of types ) {
-    const snakeCase     = toReduxType(type)
-    compiled[type]      = snakeCase
+    const snakeCase = toReduxType(type)
+    compiled[type]  = snakeCase
   }
   return compiled
 }
@@ -15,8 +15,9 @@ const buildCreator = (type, keys) => (...args) => {
     compiled = { ...compiled, ...(isObjLiteral(args[0]) && args[0]) }
   } else if ( Array.isArray(keys) ) {
     for ( const key of keys ) { compiled[key] = args[i++] }
-    if (args.length > keys.length && isObjLiteral(args[i + 1]))
-      compiled = { ...compiled, ...args[i + 1] }
+    if (args.length > keys.length && isObjLiteral(args[i])) {
+      compiled = { ...compiled, ...args[i] }
+    }
   } else if ( typeof keys === 'function' ) {
     compiled = { ...compiled, ...keys(...args) }
   } else if ( isObjLiteral(keys) ) { 
@@ -35,7 +36,7 @@ const buildActions = (actions) => {
 
 const createActions = actions => {
   if ( ! actions ) { throw new Error('No Actions Received') }
-  const _types = Object.keys(actions), _actions = Object.values(actions)
+  const _types   = Object.keys(actions)
   const TYPES   = buildTypes(_types),
         ACTIONS = buildActions(actions)
   return { TYPES, ACTIONS }

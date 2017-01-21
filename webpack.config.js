@@ -53,6 +53,12 @@ module.exports = {
   },
   
   externals: {
+    'react': {
+      commonjs: 'react',
+      commonjs2: 'react',
+      amd: 'react',
+      root: '_'
+    },
     'redux-saga/effects': {
       commonjs: 'redux-saga/effects',
       commonjs2: 'redux-saga/effects',

@@ -1,23 +1,14 @@
 import { spawn, fork } from 'redux-saga/effects'
 import { createActions } from './createActions'
 import { createSelector, createStructuredSelector } from 'reselect'
+import { registerRecord } from './registry'
 import * as generate from './reducerGenerators'
 
 import { isReduxType, toReduxType, isObjLiteral, props } from './helpers'
 import { hasWildcard } from './wildcard'
 
-const PROCESS_CONTEXT = {
-  actions:   {},
-  types:     {},
-  selectors: {}
-}
-
 const processName  = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
 
-function processContext(what) {
-  if ( ! what ) { return PROCESS_CONTEXT }
-  return PROCESS_CONTEXT[what]
-}
 
 function* runProcesses(categories) {
   for ( const categoryID in categories ) {
@@ -57,7 +48,7 @@ function* runProcess(proc) {
 }
 
 function buildProcesses(categories) {
-  if ( process.env.IS_NODE === true && props.ssr === false ) {
+  if ( typeof window !== 'object' && props.ssr === false ) {
     console.info('Processes have been set to only run on the client, cancelling build')
     return
   }
@@ -138,6 +129,7 @@ function buildProcess(proc) {
     buildActions(proc, compiled)
     buildActionRoutes(proc, compiled)
     mutateProcess(proc, compiled)
+    props.useRegistry && registerRecord(proc)
   } else {
     /* Already compiled this process, return compiled data */
     if ( proc.reducer ) { compiled.reducer = proc.reducer }
@@ -254,28 +246,8 @@ const parseCompiledProcess = (compiled, processes) => {
       processes.initialState[name]  = compiled.initialState || {}
     }
   }
-  if ( ! compiled.cached && props.useContext ) {
-    /* If we are returning cached data no need to merge into the global context */
-    if ( compiled.actions ) {
-      PROCESS_CONTEXT.actions = {
-        ...PROCESS_CONTEXT.actions,
-        ...compiled.actions
-      }
-    }
-    if ( compiled.types ) {
-      PROCESS_CONTEXT.types = {
-        ...PROCESS_CONTEXT.types,
-        ...compiled.types
-      }
-    }
-    if ( compiled.selectors ) {
-      PROCESS_CONTEXT.selectors = {
-        ...PROCESS_CONTEXT.selectors,
-        ...compiled.selectors
-      }
-    }
-  }
+
   
 }
 
-export { runProcesses, runProcess, buildProcesses, processName, processContext }
+export { runProcesses, runProcess, buildProcesses, processName }

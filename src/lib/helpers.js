@@ -1,5 +1,5 @@
 
-var props = { compiled: false, mergeReducers: true, useContext: false, wildcardMatch: true }
+var props = { compiled: false, mergeReducers: true, useRegistry: true, wildcardMatch: true, ssr: true }
 
 const configProcess = config => ( config &&  ( props = { ...props, ...config } ) )
 
