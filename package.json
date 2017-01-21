@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-process",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Processes for Redux-Saga",
   "main": "dist/redux-saga-process.js",
   "scripts": {

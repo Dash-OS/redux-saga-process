@@ -1,13 +1,31 @@
 var path = require('path');
 var webpack = require('webpack');
 var UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
-var env = require('yargs').argv.mode;
+//var env = require('yargs').argv.mode;
 var libraryName = 'redux-saga-process'
 var plugins = [], outputFile;
 
-if (env === 'build') {
-  plugins.push(new UglifyJsPlugin({ minimize: true }));
+var env = 'production'
+
+if (env === 'production') {
+  plugins.push(new webpack.optimize.UglifyJsPlugin({
+    sourceMap: false,
+    compress: {
+      screw_ie8: true,
+      warnings: false,
+    },
+    mangle: {
+      screw_ie8: true,
+    },
+    output: {
+      comments: false,
+      screw_ie8: true,
+    },
+  }));
   outputFile = libraryName + '.min.js';
+  plugins.push(new webpack.LoaderOptionsPlugin({
+    minimize: true,
+  }))
 } else {
   outputFile = libraryName + '.js';
 }
@@ -18,7 +36,7 @@ module.exports = {
 
   target: 'async-node',
 
-  devtool: 'source-map',
+  devtool: env !== 'production' && 'source-map',
 
   output: {
     path: './dist',
@@ -34,6 +52,8 @@ module.exports = {
       'src/lib'
     ],
   },
+  
+  plugins: plugins,
 
   module: {
     rules: [
