@@ -3,10 +3,11 @@
 [![npm version](https://badge.fury.io/js/redux-saga-process.svg)](https://badge.fury.io/js/redux-saga-process)
 
 Saga Processes provide an encapsulated environment for processing complex (or simple) logic.  
-The Saga Process pattern that we are presenting is (surprisingly) heavily inspired by the general 
+The Saga Process pattern that is being presenting is heavily inspired (surprisingly) by the general 
 concept of [processes](https://en.wikipedia.org/wiki/Process_(computing)).  Each Process manages 
-its logic, hold local state, and make intelligent decisions on when and how to dispatch a 
-pure repesentation of such data to the rest of the Application to be rendered efficiently.  
+its logic, holds its local state, and makes intelligent decisions on when and how to dispatch a 
+pure repesentation of such data to the rest of the Application to be rendered efficiently. Keep 
+the logic out of your views.
 
 ### Package Dependencies
 - [redux](https://github.com/reactjs/redux)
@@ -49,15 +50,13 @@ into any other app.  This should enable sharing of logic between your apps and/o
  events.  In use we do a bit more monitoring of different events, but stripped some of that out to make it more direct of an example.
 - [Action Logger](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/actionLogger/actionLogger.js) - A minimal process which simply 
   logs any actions dispatched.  
+- [Redux Persistor](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/reduxPersistor/reduxPersistor.js) - Handles the management of 
+  saving application data to persistent storage (in our case we use localForage).
 
-***
-
-<center><h3>Thoughts, Comments, Questions, Pull Requests welcome!</h3></center>
 
 ***
 
 #### Creating a Saga Redux Process
-
 
 
 ```javascript
