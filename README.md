@@ -32,8 +32,9 @@ run as daemons in most cases which will live and respond throughout the lifetime
 application.  
 
 Processes are run as sagas using the [redux-saga](https://github.com/redux-saga/redux-saga) 
-library.  They can also be configured to reduce a portion of your [redux](https://github.com/reactjs/redux) 
-store to provide a way to dispatch a pure representation of the view that should be rendered.
+library.  They may also be configured to reduce a portion of your [redux](https://github.com/reactjs/redux) 
+store, providing a means for dispatching a pure representation of our data to be rendered by our 
+view-layer.
 
 > **Note:** This package should be considered a work-in-progress and should be tested thoroughly 
 > at this point before using in your projects.  We just decoupled the whole package from our 
