@@ -2,9 +2,10 @@
 
 [![npm version](https://badge.fury.io/js/redux-saga-process.svg)](https://badge.fury.io/js/redux-saga-process)
 
-Redux Saga Processe (RSP) introduces an opinionated pattern for building modular, clean, and powerful 
-[redux-saga's](https://github.com/redux-saga/redux-saga) by running them within ES6 classes and providing 
-them with an encapsulated, simple, and powerful API.  
+Saga Processes provide an encapsulated environment for processing complex (or simple) logic.  
+The Saga Process pattern is meant to mimic the general concept of processes.  Each can manage 
+its logic, normalize data, hold local state, and make intelligent decisions on when and how 
+to dispatch data to the rest of the Application.  
 
 ### Package Dependencies
 - [redux](https://github.com/reactjs/redux)
@@ -23,23 +24,13 @@ $ npm install --save redux-saga-process
 
 # Overview
 
-RSP has been inspired by the pattern we have begun using on our various applications 
-to handle the heavy amount of asynchronous and highly dynamic content we handle.  It has 
-helped us to greatly reduce boilerplate & simplify our applications asynchronous logic.
+Processes should remain a "pure environment" with a specific purpose or intent.  They 
+run as daemons in most cases which will live and respond throughout the lifetime of the 
+application.  
 
-Essentially RSP provides a pattern you can follow to bring your redux-sagas into a class,
-provide local reducers & action creators, handle redux types, handle "push" as well as 
-"pull" actions, and more.  
-
-We do a few powerful things under-the-hood such as building and merging like-reducers, 
-routing your dispatches intelligently, generating action creators, routing actions into 
-your processes, and more.  See the overview and examples below to see how it all looks.
-
-When I have the time I will try to add a gitbook for the documentation.  For now I will attempt
-to document everything you need to know here.
-
-> **Testing:** If you are wanting to run tests you will likely want / need to substitute 
-> many of the ```yield*``` calls with something like ```yield apply()```
+Processes are run as sagas using the [redux-saga](https://github.com/redux-saga/redux-saga) 
+library.  They can also be configured to reduce a portion of your [redux](https://github.com/reactjs/redux) 
+store to provide a way to dispatch a pure representation of the view that should be rendered.
 
 > **Note:** This package should be considered a work-in-progress and should be tested thoroughly 
 > at this point before using in your projects.  We just decoupled the whole package from our 
