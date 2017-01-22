@@ -3,9 +3,10 @@
 [![npm version](https://badge.fury.io/js/redux-saga-process.svg)](https://badge.fury.io/js/redux-saga-process)
 
 Saga Processes provide an encapsulated environment for processing complex (or simple) logic.  
-The Saga Process pattern is meant to mimic the general concept of processes.  Each can manage 
-its logic, normalize data, hold local state, and make intelligent decisions on when and how 
-to dispatch data to the rest of the Application.  
+The Saga Process pattern that we are presenting is (surprisingly) heavily inspired by the general 
+concept of [processes](https://en.wikipedia.org/wiki/Process_(computing)).  Each Process manages 
+its logic, hold local state, and make intelligent decisions on when and how to dispatch a 
+pure repesentation of such data to the rest of the Application to be rendered efficiently.  
 
 ### Package Dependencies
 - [redux](https://github.com/reactjs/redux)
