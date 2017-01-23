@@ -92,11 +92,16 @@ function buildProcesses(categories) {
     if ( typeof reducer === 'function' ) {
       continue
     } else if ( Array.isArray(reducer) ) {
+      console.log('Array Map: ', reducer)
+      const combinedReducers = reducer.map(r => 
+        props.wildcardMatch && hasWildcard(r)
+          ? generate.wildcardMapReducer(undefined, r, undefined)
+          : generate.objectMapReducer(undefined, r, undefined)
+      )
+      console.log(combinedReducers)
       processes.reducers[reducerName] = generate.arrayMapReducer(
         processes.initialState[reducerName],
-        reducer.map(r => 
-          buildObjectMapReducer(reducerName, r, undefined, r,undefined)
-        ),
+        combinedReducers,
         processes.context[reducerName]
       )
     } else if ( isObjLiteral(reducer) ) {
