@@ -12,6 +12,9 @@ const toReduxType =
 const isReduxType =
   str => /\b[A-Z]+(_[A-Z]+)*\b/.test(str)
   
-
+const cancellablePromise = (p, onCancel, CANCEL) => {
+  p[CANCEL] = onCancel // eslint-disable-line
+  return p
+}
     
-export { isObjLiteral, toReduxType, isReduxType, props, configProcess }
+export { isObjLiteral, toReduxType, isReduxType, props, configProcess, cancellablePromise }

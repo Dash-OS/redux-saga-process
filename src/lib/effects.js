@@ -248,8 +248,6 @@ const parseCompiledProcess = (compiled, processes) => {
       processes.initialState[name]  = compiled.initialState || {}
     }
   }
-
-  
 }
 
 export { runProcesses, runProcess, buildProcesses, processName }

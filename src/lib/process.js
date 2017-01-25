@@ -4,15 +4,17 @@ import {  CANCEL, delay } from 'redux-saga'
 import { TASK } from 'redux-saga/utils'
 import { take, fork, put, cancel, call, race, apply, cancelled, select } from 'redux-saga/effects'
 
-import { isReduxType, toReduxType, props as processProps, isObjLiteral } from './helpers'
+import { 
+  isReduxType, 
+  toReduxType, 
+  props as processProps, 
+  isObjLiteral,
+  cancellablePromise
+} from './helpers'
+
 import { Wildcard, hasWildcard } from './wildcard'
 
 const WC = processProps.wildcardMatch && new Wildcard()
-
-function cancellablePromise(p, onCancel) {
-  p[CANCEL] = onCancel // eslint-disable-line
-  return p
-}
 
 class Process {
   
@@ -52,56 +54,6 @@ class Process {
       this.task.classTasks.push(staticsTask, startTask)
     },
     
-    getPattern(_types, config) {
-      const patterns = []
-      let types, isObject
-      if (isObjLiteral(_types)) {
-        types = Object.keys(_types)
-        isObject = true
-      } else {
-        types = _types
-        isObject = false
-      }
-  
-      if (types === undefined || types.length === 0) {
-        return '@@_PROCESS_DONT_MONITOR_TYPE_'
-      }
-  
-      for (const type of types) {
-        const wildcardMatch = processProps.wildcardMatch && hasWildcard(type)
-        if ( wildcardMatch ) { config.wildcard = true }
-        let fn
-        const params = isObject ? _types[type] : _types
-        switch (typeof params) {
-          case 'string': {
-            fn = wildcardMatch
-              ? action => WC.pattern(type).match(action.type)
-              : action => action.type === type
-            patterns.push(fn)
-            break
-          }
-          case 'object': {
-            let fn
-            if (Array.isArray(type)) {
-              fn = wildcardMatch
-                ? action => WC.pattern(type).match(action.type)
-                : action => action.type
-            } else {
-              fn = action => Object.keys(type).every(x => type[x] === action[x])
-            }
-            patterns.push(fn)
-            break
-          }
-          case 'function':
-            patterns.push(fn)
-            break
-          default:
-            console.error(`Unsupported type ${type}`)
-        }
-      }
-      return action => patterns.some(func => func(action))
-    },
-    
     * startProcessMonitor(target) {
       const {
         actions,
@@ -113,12 +65,12 @@ class Process {
       } = target
   
       const config = { wildcard: false }
-      const monitorPattern = actionRoutes && this.__utils.getPattern(actionRoutes, config) || '@@_PROCESS_DONT_MONITOR_TYPE_',
-            cancelPattern  = cancelTypes  && this.__utils.getPattern(cancelTypes) || '@@_PROCESS_DONT_MONITOR_TYPE_'
+      const monitorPattern = actionRoutes && getPattern(actionRoutes, config) || '@@_PROCESS_DONT_MONITOR_TYPE_',
+            cancelPattern  = cancelTypes  && getPattern(cancelTypes) || '@@_PROCESS_DONT_MONITOR_TYPE_'
             
       this.__utils.selectors = selectors
       this.__utils.actions   = actions
-      this.__utils.target = target
+      this.__utils.target    = target
       
       if ( monitorPattern === '@@_PROCESS_DONT_MONITOR_TYPE_' && cancelPattern === '@@_PROCESS_DONT_MONITOR_TYPE_') {
         //console.info(name, ' process does not monitor anything and will be killed when it completes its lifecycle')
@@ -331,7 +283,7 @@ class Process {
           } else {
             promise = new Promise(resolve => dispatchQueue.push(resolve))
           }
-          return cancellablePromise(promise, onCancel)
+          return cancellablePromise(promise, onCancel, CANCEL)
         }
       }
     }
@@ -342,9 +294,10 @@ class Process {
     if ( 
       typeof selector === 'string' && 
       this.__utils.selectors &&
-      Object.keys(this.__utils.selectors).includes(selector)
+      ( this.__utils.selectors.public[selector] || this.__utils.selectors.private[selector] )
     ) {
-      return yield select(this.__utils.selectors[selector], props)
+      const selectFn = this.__utils.selectors.public[selector] || this.__utils.selectors.private[selector]
+      return yield select(selectFn, props)
     } else if ( typeof selector === 'function' ) {
       return yield select(selector)
     } else if ( Array.isArray(selector) ) {
@@ -364,13 +317,16 @@ class Process {
   }
   
   * dispatch(action, ...args) {
-    if (
-      typeof action === 'string' &&
-      this.__utils.actions &&
-      Object.keys(this.__utils.actions).includes(action)
-    ) {
-      yield put(this.__utils.actions[action](...args))
-    } else if ( action && action.type ) {
+    const actionFn = 
+      typeof action === 'string' 
+      && this.__utils.actions 
+      && (  this.__utils.actions.public[action] 
+        ||  this.__utils.actions.private[action] 
+      )
+    if ( actionFn ) {
+      console.log(actionFn(...args))
+      yield put(actionFn(...args))
+    } else if ( typeof action === 'object' && action.type ) {
       yield put(action)
     } else { throw new Error('Must dispatch either a registered action or a valid redux action object.') }
   }
@@ -381,7 +337,63 @@ class Process {
       ...state
     }
   }
-
 }
+
+const getPattern = (_types, config) => {
+  const patterns = []
+  let types, isObject
+  
+  if (isObjLiteral(_types)) {
+    types = Object.keys(_types)
+    isObject = true
+  } else {
+    types = _types
+    isObject = false
+  }
+
+  if (types === undefined || types.length === 0) {
+    return '@@_PROCESS_DONT_MONITOR_TYPE_'
+  }
+
+  for (const type of types) {
+    parseTypePattern(type, isObject, _types, patterns, config)
+  }
+  
+  return action => patterns.some(func => func(action))
+}
+
+const parseTypePattern = (type, isObject, _types, patterns, config) => {
+  const wildcardMatch = processProps.wildcardMatch && hasWildcard(type)
+  if ( wildcardMatch ) { config.wildcard = true }
+  let fn
+  const params = isObject ? _types[type] : _types
+  switch (typeof params) {
+    case 'string': {
+      fn = wildcardMatch
+        ? action => WC.pattern(type).match(action.type)
+        : action => action.type === type
+      patterns.push(fn)
+      break
+    }
+    case 'object': {
+      let fn
+      if (Array.isArray(type)) {
+        fn = wildcardMatch
+          ? action => WC.pattern(type).match(action.type)
+          : action => action.type
+      } else {
+        fn = action => Object.keys(type).every(x => type[x] === action[x])
+      }
+      patterns.push(fn)
+      break
+    }
+    case 'function':
+      patterns.push(fn)
+      break
+    default:
+      console.error(`Unsupported type ${type}`)
+  }
+}
+
 
 export default Process
