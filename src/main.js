@@ -25,3 +25,7 @@ export {
 export { 
   default as default 
 } from './lib/process'
+
+export {
+  default as statics
+} from './lib/statics'

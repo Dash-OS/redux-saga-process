@@ -32,7 +32,10 @@ if (env === 'production') {
 
 module.exports = {
 
-  entry: path.resolve(__dirname, './src/main.js'),
+  entry: [
+    path.resolve(__dirname, './src/statics.js'),
+    path.resolve(__dirname, './src/main.js')
+  ],
 
   target: 'async-node',
 

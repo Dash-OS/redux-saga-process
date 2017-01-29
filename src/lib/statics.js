@@ -5,9 +5,8 @@
 import React from 'react'
 import { getRecord, getRecords } from './registry'
 
-const statics = (selected, connector, config = {}) => WrappedComponent => props => {
-  const Component = connector(getRecords(selected, config) || {})(WrappedComponent)
-  return <Component {...props} />
+const statics = (selected, connector, config = {}) => {
+  return connector(getRecords(selected, config) || {})
 }
 
 export default statics

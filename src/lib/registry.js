@@ -27,7 +27,7 @@ class RecordContext {
   captureExported = proc => {
     const { exports } = proc
     for (let $export of exports ) {
-      this.exported[$export] = proc[$export]
+      this.exported[$export] = proc[$export] && proc[$export].public
     }
   }
 }
@@ -59,7 +59,6 @@ const getRecord = (id, props, config, accum) => {
 /* Reduce an object container pid/selector pairs */
 /* { modals<pid>: ['selectors', 'actions']<selected> } */
 function getRecords(records, config, accum = {}) {
-  console.log(RecordRegistry)
   if ( Object.keys(RecordRegistry).length === 0 ) { return {} }
   return Object.keys(records)
     .reduce( (p, c) => getRecord(c, records[c], config, p), accum )
