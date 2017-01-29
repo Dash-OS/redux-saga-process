@@ -2,7 +2,8 @@ import { isObjLiteral, toReduxType } from './helpers'
 
 const buildTypes = types => {
   const compiled = {}
-  for ( let type of types ) {
+  for ( let _type of types ) {
+    const type  = _type.replace(/^!/, '')
     const snakeCase = toReduxType(type)
     compiled[type]  = snakeCase
   }
@@ -27,9 +28,11 @@ const buildCreator = (type, keys) => (...args) => {
 }
 
 const buildActions = (actions) => {
-  const compiled = {}
-  for ( let type in actions ) {
-    compiled[type] = buildCreator(toReduxType(type), actions[type])
+  const compiled = { public: {}, private: {} }
+  for ( let _type in actions ) {
+    const scope = _type.startsWith('!') ? 'private' : 'public',
+          type  = _type.replace(/^!/, "")
+    compiled[scope][type] = buildCreator(toReduxType(type), actions[_type])
   }
   return compiled
 }

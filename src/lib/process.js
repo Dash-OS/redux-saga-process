@@ -18,6 +18,8 @@ const WC = processProps.wildcardMatch && new Wildcard()
 
 class Process {
   
+  static isProcess = true;
+  
   constructor(config, State) {
     this.config = config
     this.state  = State || {}
@@ -324,7 +326,6 @@ class Process {
         ||  this.__utils.actions.private[action] 
       )
     if ( actionFn ) {
-      console.log(actionFn(...args))
       yield put(actionFn(...args))
     } else if ( typeof action === 'object' && action.type ) {
       yield put(action)

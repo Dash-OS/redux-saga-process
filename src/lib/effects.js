@@ -7,22 +7,24 @@ import * as generate from './reducerGenerators'
 import { isReduxType, toReduxType, isObjLiteral, props } from './helpers'
 import { hasWildcard } from './wildcard'
 
-const processName  = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).name
+const isProcess  = o => Object.getPrototypeOf(o) && Object.getPrototypeOf(o).isProcess === true;
 
+const isSSR =
+  ( typeof window === undefined || typeof window !== 'object' || ! window || ! window.document )
 
 function* runProcesses(categories) {
   for ( const categoryID in categories ) {
     const category = categories[categoryID]
     if ( 
-      processName(category) !== 'Process' &&
+      isProcess(category) !== true &&
       typeof category !== 'object' 
     ) { continue }
-    if ( processName(category) === 'Process') {
+    if ( isProcess(category) === true ) {
       isProcessActive(category) && ( yield fork(runProcess, category) )
     } else {
       for ( const processID in category ) {
         const proc = category[processID]
-        if ( processName(proc) === 'Process' ) {
+        if ( isProcess(proc) === true ) {
           isProcessActive(proc) && ( yield fork(runProcess, proc) )
         } else { continue }
       }
@@ -32,7 +34,7 @@ function* runProcesses(categories) {
 
 const isProcessActive = ({ config = {} }) => (
      config.enabled === false
-  || process.env.IS_NODE === true && config.ssr === false
+  || ( isSSR && config.ssr === false )
     ? false
     : true
 )
@@ -48,7 +50,7 @@ function* runProcess(proc) {
 }
 
 function buildProcesses(categories) {
-  if ( typeof window !== 'object' && props.ssr === false ) {
+  if ( isSSR && props.ssr === false ) {
     console.info('Processes have been set to only run on the client, cancelling build')
     return
   }
@@ -61,17 +63,17 @@ function buildProcesses(categories) {
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
     if ( 
-      processName(category) !== 'Process' &&
+      isProcess(category) !== true &&
       typeof category !== 'object' 
     ) { continue }
-    if ( processName(category) === 'Process' ) {
+    if ( isProcess(category) === true ) {
       const compiled = isProcessActive(category) && buildProcess(category)
       if ( ! compiled ) { continue }
       parseCompiledProcess(compiled, processes)
     } else {
       for ( const processID in category ) {
         const proc = category[processID]
-        if ( processName(proc) === 'Process' ) {
+        if ( isProcess(proc) === true ) {
           const compiled = isProcessActive(proc) && buildProcess(proc)
           if ( ! compiled ) { continue }
           parseCompiledProcess(compiled, processes)
@@ -169,24 +171,56 @@ const buildReducer = ({ config = {}, initialState, reducer }, compiled = {}) => 
 }
 
 const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
+  let deferredSelectors = []
+  const coreSelector = config.reduces 
+    ? state => state[config.reduces] 
+    : state => state
   if ( ! props.compiled && selectors ) {
-    if ( ! compiled.selectors ) { compiled.selectors = {} }
-    for ( const selector in selectors ) {
-      const selectorValue = selectors[selector]
+    if ( ! compiled.selectors ) { compiled.selectors = { public: {}, private: {} } }
+    for ( const _selector in selectors ) {
+      const scope         = _selector.startsWith('!') ? 'private' : 'public',
+            selector      = _selector.replace(/^!/, ''),
+            selectorValue = selectors[_selector]
       if ( Array.isArray(selectorValue) ) {
+        const deferCreation = selectorValue.some(s => typeof s === 'string')
+        if ( deferCreation ) {
+          deferredSelectors.push({
+            scope, selector, selectorValue
+          })
+          continue
+        }
         if ( selectorValue.length === 1 ) {
-          const coreSelector = config.reduces ? state => state[config.reduces] : state => state
-          compiled.selectors[selector] = createSelector(coreSelector, ...selectors[selector])
+          compiled.selectors[scope][selector] = createSelector(coreSelector, ...selectorValue)
         } else {
-          compiled.selectors[selector] = createSelector(...selectors[selector])
+          compiled.selectors[scope][selector] = createSelector(...selectorValue)
         }
       } else if ( isObjLiteral(selectorValue) ) {
-        compiled.selectors[selector] = createStructuredSelector(selectors[selector])
-        
-      } else { throw new Error('Process Selectors must be an array of selectors') }
+        compiled.selectors[scope][selector] = createStructuredSelector(selectorValue)
+      } else { throw new Error('Process Selectors must be an array or object of selectors') }
+    }
+  }
+  // We defer selector creation when a composed selector is discovered (by providing a string reference)
+  // This allows us to nest selectors.
+  for ( let deferredSelector of deferredSelectors ) {
+    const { scope, selector, selectorValue: _selectorValue } = deferredSelector
+    if ( _selectorValue.length === 1 ) {
+      throw new Error('[PROCESS BUILD ERROR - Selectors]: Composed Selectors may not be a single element, it makes no sense.')
+    } else {
+      const selectorValue = composeSelector(deferredSelector, compiled)
+      compiled.selectors[scope][selector] = createSelector(...selectorValue)
     }
   }
   return compiled
+}
+
+const composeSelector = ({ selectorValue }, compiled) => {
+  return selectorValue.map(value => {
+    // We need to replace strings with our composed selectors
+    if ( typeof value !== 'string' ) { return value }
+    const composed = compiled.selectors.public[value] || compiled.selectors.private[value]
+    if ( ! composed ) {  throw new Error(`[PROCESS BUILD ERROR - Selectors]: Failed to discover composed selector: ${value}`)  }
+    return composed
+  })
 }
 
 const buildActions = (proc, compiled = {}) => {
@@ -250,4 +284,4 @@ const parseCompiledProcess = (compiled, processes) => {
   }
 }
 
-export { runProcesses, runProcess, buildProcesses, processName }
+export { runProcesses, runProcess, buildProcesses, isProcess }
