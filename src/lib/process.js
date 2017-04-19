@@ -2,7 +2,7 @@
 
 import {  CANCEL, delay } from 'redux-saga'
 import { TASK } from 'redux-saga/utils'
-import { take, fork, put, cancel, call, race, apply, cancelled, select } from 'redux-saga/effects'
+import { take, fork, put, cancel, call, race, apply, cancelled, select, spawn } from 'redux-saga/effects'
 
 import { 
   isReduxType, 
@@ -49,11 +49,25 @@ class Process {
     * init(target) {
       this.name = this.name || target.name || 'ANONYMOUS_PROCESS'
       const staticsTask = yield fork([ this, this.__utils.startProcessMonitor ], target)
+      if ( target.selectors ) {
+        yield fork([ this, this.__utils.prepareSelectors ], target.selectors)
+      }
       let startTask
       if (typeof this.processStarts === 'function') {
         startTask = yield fork([this, this.processStarts])
       }
       this.task.classTasks.push(staticsTask, startTask)
+    },
+    
+    * prepareSelectors(selectors) {
+      this.__utils.selectors = {}
+      for ( let scope in selectors ) {
+        const selectorCreators = selectors[scope]
+        for ( let selectorID in selectorCreators ) {
+          const selectorCreator = selectors[scope][selectorID]
+          this.__utils.selectors[selectorID] = selectorCreator()
+        }
+      }
     },
     
     * startProcessMonitor(target) {
@@ -70,7 +84,6 @@ class Process {
       const monitorPattern = actionRoutes && getPattern(actionRoutes, config) || '@@_PROCESS_DONT_MONITOR_TYPE_',
             cancelPattern  = cancelTypes  && getPattern(cancelTypes) || '@@_PROCESS_DONT_MONITOR_TYPE_'
             
-      this.__utils.selectors = selectors
       this.__utils.actions   = actions
       this.__utils.target    = target
       
@@ -110,6 +123,7 @@ class Process {
     * handleMonitorExecution(action, config = {}) {
       const { actionRoutes, name } = this.__utils.target
       const route = actionRoutes[action.type]
+      // console.log('Handle Monitor Execution!', route, this, this[route])
       if (typeof this[route] !== 'function' ) {
         if ( ! config.wildcard ) {
           console.error(`${name}'s Action Route ${route} is not a function`)
@@ -152,7 +166,7 @@ class Process {
   
   task = {
     * create(category, id, callback, ...props) {
-      const task = yield fork([this, callback], ...props)
+      const task = yield spawn([this, callback], ...props)
       yield* this.task.save(task, category, id)
       return task
     },
@@ -186,6 +200,7 @@ class Process {
         return this.task.roster
       }
     },
+    
     /*
       onComplete()
         Register a callback that will be made with the "this" context attached
@@ -201,7 +216,9 @@ class Process {
         console.error('[PROCESS] Task Watcher received an invalid task object: ', task)
         return
       }
+      
       try { yield task.done } finally {
+        //console.log('OnComplete')
         // Make the callback if the function is found, otherwise transmit
         // a message to console
         if ( ! callback ) { return }
@@ -217,6 +234,7 @@ class Process {
         }
       }
     },
+    
     * cleanup(category, id) {
       const roster = this.task.roster
       if ( roster[category] && roster[category][id] ) {
@@ -226,28 +244,35 @@ class Process {
         }
       }
     },
+    
     * cancel(category, id) {
+      //console.log('Cancelling: ', category, id)
       //const task = yield* this.task.task(category, id)
       const task = yield apply(this, this.task.task, [ category, id ])
+      console.log(task)
       if ( ! task ) {
         // Should we warn about the task not existing?
         return
       }
       if (task && task[TASK] && task.isRunning()) { 
+        //console.log('Cancelling Normally')
         yield cancel(task)
       } else if ( task && ! task[TASK] ) {
+        //console.log('Cancel All')
         const ids = Object.keys(task)
         for (const id of ids) {
           yield fork([this, this.task.cancel], category, id)
         }
       }
     },
+    
     * cancelAll() {
       const categories = Object.keys(this.task.roster)
       for (const category of categories) {
         yield apply(this, this.task.cancel, [ category ])
       }
     }
+    
   };
   
   observable = {
@@ -296,9 +321,9 @@ class Process {
     if ( 
       typeof selector === 'string' && 
       this.__utils.selectors &&
-      ( this.__utils.selectors.public[selector] || this.__utils.selectors.private[selector] )
+      this.__utils.selectors[selector]
     ) {
-      const selectFn = this.__utils.selectors.public[selector] || this.__utils.selectors.private[selector]
+      const selectFn = this.__utils.selectors[selector]
       return yield select(selectFn, props)
     } else if ( typeof selector === 'function' ) {
       return yield select(selector)

@@ -173,8 +173,8 @@ const buildReducer = ({ config = {}, initialState, reducer }, compiled = {}) => 
 const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
   let deferredSelectors = []
   const coreSelector = config.reduces 
-    ? state => state[config.reduces] 
-    : state => state
+    ? (state, props) => state[config.reduces]
+    : (state, props) => state
   if ( ! props.compiled && selectors ) {
     if ( ! compiled.selectors ) { compiled.selectors = { public: {}, private: {} } }
     for ( const _selector in selectors ) {
@@ -190,12 +190,15 @@ const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
           continue
         }
         if ( selectorValue.length === 1 ) {
-          compiled.selectors[scope][selector] = createSelector(coreSelector, ...selectorValue)
+          compiled.selectors[scope][selector] = 
+            () => createSelector(coreSelector, ...selectorValue)
         } else {
-          compiled.selectors[scope][selector] = createSelector(...selectorValue)
+          compiled.selectors[scope][selector] = 
+            () => createSelector(...selectorValue)
         }
       } else if ( isObjLiteral(selectorValue) ) {
-        compiled.selectors[scope][selector] = createStructuredSelector(selectorValue)
+        compiled.selectors[scope][selector] = 
+          () => createStructuredSelector(selectorValue)
       } else { throw new Error('Process Selectors must be an array or object of selectors') }
     }
   }
@@ -207,7 +210,8 @@ const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
       throw new Error('[PROCESS BUILD ERROR - Selectors]: Composed Selectors may not be a single element, it makes no sense.')
     } else {
       const selectorValue = composeSelector(deferredSelector, compiled)
-      compiled.selectors[scope][selector] = createSelector(...selectorValue)
+      compiled.selectors[scope][selector] = 
+        () => createSelector(...selectorValue)
     }
   }
   return compiled

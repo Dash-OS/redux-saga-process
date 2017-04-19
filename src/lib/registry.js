@@ -20,6 +20,7 @@ class RecordContext {
   }
   captureExports = proc => {
     const { exports } = proc
+    if ( ! exports ) { return }
     Array.isArray(exports)
       ? this.captureExported(proc)
       : Errors.exportsType()
@@ -41,18 +42,32 @@ const registerRecord = proc => {
       : [ Record ] 
 }
 
+const BUILD = {
+  selectors: raw => Object.keys(raw).reduce( (prev, id) => {
+                      prev[id] = raw[id]()
+                      return prev
+                    }, {} )
+}
 /* Reduce all records by pid, merge props across them */
 const getRecord = (id, props, config, accum) => {
   return RecordRegistry[id].reduce( (p, c) => {
     props.forEach( prop => {
       if ( c.exported[prop] !== undefined ) {
+        const value = BUILD[prop]
+          ? BUILD[prop](c.exported[prop])
+          : c.exported[prop]
+        
         p[prop] = config.prefixed === true
-          ? { ...p[prop], [id]: c.exported[prop] }
-          : { ...p[prop], ...c.exported[prop] }
+          ? { ...p[prop], [id]: value }
+          : { ...p[prop], ...value }
       }
     })
     return p 
   }, accum )
+}
+
+const buildSelector = () => {
+  
 }
   
 
