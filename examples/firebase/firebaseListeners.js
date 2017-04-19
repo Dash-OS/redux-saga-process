@@ -127,6 +127,11 @@ export default class FirebaseGettersProcess extends Process {
       console.error('Invalid Listeners Requested: ', path, category, events) 
     }
     yield* this.createListenerCategory(category)
+    
+    // If once is included in the array of events, we will call it first and await
+    // its response.  This allows us to capture the data first and update our UI then
+    // add the new listeners later.  We then will only dispatch child_added for NEW KEYS
+    // which have not already been dispatched to the UI.
     if ( events.includes('once') ) {
       this.listeners[category].once = true
       yield fork([ this, this.startListener ], {
