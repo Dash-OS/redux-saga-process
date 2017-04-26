@@ -23,7 +23,7 @@ export {
 } from './lib/wildcard'
 
 export { 
-  default as default 
+  default as Process
 } from './lib/process'
 
 export {

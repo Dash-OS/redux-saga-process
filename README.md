@@ -41,6 +41,18 @@ view-layer.
 > app(s) so some bugs may remain that need to be ironed out (although we haven't run into any with our 
 > tests at this time).
 
+# Migrating to 0.12
+
+Note that 0.12 no longer exports "default" and instead exports the named module "Process".
+
+```javascript
+// from
+import Process from 'redux-saga-process'
+
+// to
+import { Process } from 'redux-saga-process'
+```
+
 ## Examples 
 
 Here are a few examples of some simple processes which are being used today.  When built
