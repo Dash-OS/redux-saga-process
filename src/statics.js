@@ -1,1 +1,1 @@
-export { default } from './lib/statics'
+export { default } from './process-lib/statics'

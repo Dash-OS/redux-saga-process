@@ -18,7 +18,6 @@ const WC = processProps.wildcardMatch && new Wildcard()
 
 class Process {
   
-  static isProcess = true;
   
   constructor(config, State) {
     this.config = config
@@ -420,6 +419,8 @@ const parseTypePattern = (type, isObject, _types, patterns, config) => {
       console.error(`Unsupported type ${type}`)
   }
 }
+
+Process.isProcess = true
 
 
 export default Process

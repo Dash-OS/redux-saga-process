@@ -5,27 +5,27 @@ export {
   buildProcesses,
   processContext,
   
-} from './lib/effects'
+} from './process-lib/effects'
 
 export {
   toReduxType,
   configProcess
-} from './lib/helpers'
+} from './process-lib/helpers'
 
 export {
   createActions, 
   buildCreator
-} from './lib/createActions'
+} from './process-lib/createActions'
 
 export {
   Wildcard,
   hasWildcard
-} from './lib/wildcard'
+} from './process-lib/wildcard'
 
 export { 
   default as Process
-} from './lib/process'
+} from './process-lib/process'
 
 export {
   default as statics
-} from './lib/statics'
+} from './process-lib/statics'

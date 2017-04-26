@@ -4,27 +4,30 @@ var UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 //var env = require('yargs').argv.mode;
 var libraryName = 'redux-saga-process'
 var plugins = [], outputFile;
+const BabiliPlugin = require('babili-webpack-plugin');
+const NodeExternals = require('webpack-node-externals');
 
-var env = 'production'
-
-if (env === 'production') {
-  plugins.push(new webpack.optimize.UglifyJsPlugin({
-    sourceMap: false,
-    compress: {
-      screw_ie8: true,
-      warnings: false,
-    },
-    mangle: {
-      screw_ie8: true,
-    },
-    output: {
-      comments: false,
-      screw_ie8: true,
-    },
-  }));
+if (process.env.NODE_ENV === 'production') {
+  // plugins.push(new webpack.optimize.UglifyJsPlugin({
+  //   sourceMap: false,
+  //   compress: {
+  //     screw_ie8: true,
+  //     warnings: false,
+  //   },
+  //   mangle: {
+  //     screw_ie8: true,
+  //   },
+  //   output: {
+  //     comments: false,
+  //     screw_ie8: true,
+  //   },
+  // }));
   outputFile = libraryName + '.min.js';
   plugins.push(new webpack.LoaderOptionsPlugin({
     minimize: true,
+  }))
+  plugins.push(new webpack.DefinePlugin({
+    'process.env.NODE_ENV': process.env.NODE_ENV
   }))
 } else {
   outputFile = libraryName + '.js';
@@ -39,10 +42,10 @@ module.exports = {
 
   target: 'async-node',
 
-  devtool: env !== 'production' && 'source-map',
+  devtool: process.env.NODE_ENV !== 'production' && 'source-map',
 
   output: {
-    path: './dist',
+    path: path.resolve(__dirname, './dist'),
     filename: 'redux-saga-process.js',
     library: libraryName,
     libraryTarget: 'umd',
@@ -51,8 +54,7 @@ module.exports = {
 
   resolve: {
     modules: [
-      'node_modules',
-      'src/lib'
+      'node_modules'
     ],
   },
   
@@ -61,51 +63,38 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        loader: 'babel-loader',
-        include: [
-          path.resolve(__dirname, './src')
-        ],
+        test: /\.jsx?$/,
         exclude: /node_modules/,
-        options: {
-          presets: [["es2015", { "modules": false }]],
-          plugins: ['transform-runtime', 'transform-class-properties']
-        }
+        include: [
+            path.resolve(__dirname, './src')
+          ],
+        use: [ {
+          loader: 'babel-loader',
+          
+          options: {
+            // plugins: ['transform-runtime', 'transform-class-properties'],
+            presets: [
+              ['env', {
+                modules: false,
+                targets: {
+                  browsers: ['last 2 Chrome versions'],
+                  node: 'current'
+                }
+              }],
+            ],
+            env: {
+              production: {
+                presets: [ 'babili' ]
+              }
+            }
+          }
+        } ]
+        
+        
       }
     ]
   },
   
-  externals: {
-    'react': {
-      commonjs: 'react',
-      commonjs2: 'react',
-      amd: 'react',
-      root: '_'
-    },
-    'redux-saga/effects': {
-      commonjs: 'redux-saga/effects',
-      commonjs2: 'redux-saga/effects',
-      amd: 'redux-saga/effects',
-      root: '_'
-    },
-    'redux-saga': {
-      commonjs: 'redux-saga',
-      commonjs2: 'redux-saga',
-      amd: 'redux-saga',
-      root: '_'
-    },
-    'reselect': {
-      commonjs: 'reselect',
-      commonjs2: 'reselect',
-      amd: 'reselect',
-      root: '_'
-    },
-    'redux': {
-      commonjs: 'redux',
-      commonjs2: 'redux',
-      amd: 'redux',
-      root: '_'
-    }
-  }
+  externals: [ NodeExternals() ]
   
 }

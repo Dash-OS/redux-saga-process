@@ -16,10 +16,14 @@ const hasWildcard = (pattern) => (
 )
   
 class Wildcard {
-  
-  config = {
-    matchLogic: 'and',
-    matchCase:  true
+
+  constructor(str) {
+    this.config = {
+      matchLogic: 'and',
+      matchCase:  true
+    }
+    if (str) this.pattern(str)
+    return this
   }
   
   static toPattern(patterns, config = { matchLogic: 'and', matchCase: true }) {
@@ -54,10 +58,7 @@ class Wildcard {
     return compiledRE
   };
   
-  constructor(str) {
-    if (str) this.pattern(str)
-    return this
-  }
+  
   
   re = pattern => this.pattern(pattern)
   

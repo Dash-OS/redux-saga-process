@@ -11,10 +11,11 @@ const Errors = {
 const RecordRegistry = {}
 
 class RecordContext {
-  exported = {}
+  
   constructor(proc) {
     const { config } = proc
     const { pid } = config
+    this.exported = {}
     this.pid = pid
     this.captureExports(proc)
   }

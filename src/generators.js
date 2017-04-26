@@ -5,4 +5,4 @@ export {
   objectMapReducer,
   nestedObjectMapReducer,
   objectWildcardMapReducer,
-} from './lib/reducerGenerators'
+} from './process-lib/reducerGenerators'
