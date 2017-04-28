@@ -41,24 +41,24 @@ const isProcessActive = ({ config = {} }) => (
 
 function* runProcess(proc) {
   if ( ! props.compiled ) { 
-    console.warn('Did not connect to reducers before calling runProcesses, building the process now')
+    console.warn('[rsp] Did not connect to reducers before calling runProcesses, building the process now')
     buildProcess(proc)
   }
   const { config = {} } = proc
   const SagaProcess = new proc(config)
-  yield spawn(SagaProcess.__utils.init, proc)
+  yield fork(SagaProcess.__utils.init, proc)
 }
 
 function buildProcesses(categories) {
   if ( isSSR && props.ssr === false ) {
-    console.info('Processes have been set to only run on the client, cancelling build')
+    console.info('[rsp] Processes have been set to only run on the client, cancelling build')
     return
   }
-  if ( ! isObjLiteral(categories) ) { throw new Error('buildProcesses expects an object') }
+  if ( ! isObjLiteral(categories) ) { throw new Error('[rsp] buildProcesses expects an object') }
   const processes = {
-    reducers: {},
+    reducers:     {},
     initialState: {},
-    context: {},
+    context:      {},
   }
   for ( const categoryID of Object.keys(categories) ) {
     const category = categories[categoryID]
@@ -115,8 +115,13 @@ function buildProcesses(categories) {
         reducer,
         processes.context[reducerName]
       )
-    } else { throw new Error('Failed to Build Reducer: ', reducerName, processes.reducers) }
+    } else { throw new Error('[rsp] Failed to Build Reducer: ', reducerName, processes.reducers) }
   }
+  // if ( ! processes.reducers ) {
+  //   // We want to provide at least one reducer so we don't get an error
+  //   // when using this with combineReducers.  
+  //   processes.reducers._e = generate.emptyReducer
+  // }
   props.compiled = true
   return {
     reducerNames:    Object.keys(processes.reducers),
@@ -222,7 +227,7 @@ const composeSelector = ({ selectorValue }, compiled) => {
     // We need to replace strings with our composed selectors
     if ( typeof value !== 'string' ) { return value }
     const composed = compiled.selectors.public[value] || compiled.selectors.private[value]
-    if ( ! composed ) {  throw new Error(`[PROCESS BUILD ERROR - Selectors]: Failed to discover composed selector: ${value}`)  }
+    if ( ! composed ) {  throw new Error(`[rsp - Selectors]: Failed to discover composed selector: ${value}`)  }
     return composed
   })
 }
@@ -257,7 +262,7 @@ const mutateProcess = (process, compiled) => {
 const mergeReducers = (compiled, processes) => {
   const name = compiled.reducer.name
   if ( ! props.mergeReducers ) {
-    throw new Error(`Two processes are attempting to reduce the same key (${name}) in the state but mergeReducers is disabled.`)
+    throw new Error(`[rsp] Two processes are attempting to reduce the same key (${name}) in the state but mergeReducers is disabled.`)
   }
   if ( Array.isArray(processes.reducers[name]) ) {
     processes.reducers[name].push(compiled.reducer.reducer)
@@ -278,7 +283,7 @@ const mergeReducers = (compiled, processes) => {
 const parseCompiledProcess = (compiled, processes) => {
   if ( compiled.reducer && compiled.reducer.reducer ) {
     const name = compiled.reducer.name
-    if ( ! name ) { throw new Error('Reducer Does Not Have a Name? ', compiled) }
+    if ( ! name ) { throw new Error('[rsp] Reducer Does Not Have a Name? ', compiled) }
     if ( processes.reducers[name] ) {
       mergeReducers(compiled, processes)
     } else {

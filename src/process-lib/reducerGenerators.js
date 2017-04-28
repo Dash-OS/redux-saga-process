@@ -16,6 +16,9 @@ import { Wildcard } from './wildcard'
   
 // console.log(WC)
 
+const emptyReducer = 
+  ( initialState = {}, reducers ) =>  ( state = initialState, action ) => state
+  
 const arrayMapReducer = 
   ( initialState, reducers, pcontext ) =>  ( state = initialState, action, context ) =>
   ( reducers.reduce( (p, c)  => c(p, action, { ...pcontext, ...context }), state ) )
@@ -59,6 +62,7 @@ const nestedObjectMapReducer =
   }
   
 export { 
+  emptyReducer,
   arrayMapReducer, 
   objectMapReducer, 
   nestedObjectMapReducer, 
