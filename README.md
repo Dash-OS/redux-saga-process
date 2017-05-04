@@ -137,6 +137,26 @@ const rootReducer = combineReducers({
 
 ***
 
+#### Running your Processes
+
+Now that we have built our processes we need to run them.  This is done from within your
+[root redux-saga](https://redux-saga.github.io/redux-saga/docs/introduction/BeginnerTutorial.html).
+
+```javascript
+// configureSagas.js
+import { fork } from 'redux-saga/effects'
+import { runProcesses } from 'redux-saga-process'
+import * as processCategories from '../processes'
+
+function* root() {
+  yield* runProcesses(processCategories)
+}
+
+export default root
+```
+
+***
+
 #### Hot Reloading Processes
 
 We have the ability to hot reload our processes.  RSP will pass the `state` object,
@@ -179,27 +199,7 @@ if ( module.hot ) {
 }
 ```
 
-#### Running your Processes
-
-Now that we have built our processes we need to run them.  This is done from within your
-[root redux-saga](https://redux-saga.github.io/redux-saga/docs/introduction/BeginnerTutorial.html).
-
-```javascript
-// configureSagas.js
-import { fork } from 'redux-saga/effects'
-import { runProcesses } from 'redux-saga-process'
-import * as processCategories from '../processes'
-
-function* root() {
-  yield* runProcesses(processCategories)
-}
-
-export default root
-```
-
-> Interally, each Process uses the [spawn](https://redux-saga.github.io/redux-saga/docs/api/index.html#spawncontext-fn-args)
-> method to create an independent frame of execution that should not be affected by your other
-> sagas, processes, and/or the rest of your application.
+***
 
 # Building your Processes
 
