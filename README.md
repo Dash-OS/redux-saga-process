@@ -144,11 +144,13 @@ Now that we have built our processes we need to run them.  This is done from wit
 
 ```javascript
 // configureSagas.js
-import { fork } from 'redux-saga/effects'
 import { runProcesses } from 'redux-saga-process'
 import * as processCategories from '../processes'
 
 function* root() {
+  // Processes are forked once ran, so we can simply use yield* in this case.
+  // You could also use fork if you wish - but be careful with [spawn] if you
+  // want to hot reload!
   yield* runProcesses(processCategories)
 }
 
