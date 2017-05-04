@@ -1,13 +1,13 @@
-# Redux Saga Process 
+# Redux Saga Process
 
 [![npm version](https://badge.fury.io/js/redux-saga-process.svg)](https://badge.fury.io/js/redux-saga-process)
 
-Saga Processes provide an encapsulated environment for processing complex (or simple) logic.  
-The Saga Process pattern that is being presenting is heavily inspired (surprisingly) by the general 
-concept of [processes](https://en.wikipedia.org/wiki/Process_(computing)).  
+Saga Processes provide an encapsulated environment for processing complex (or simple) logic.
+The Saga Process pattern that is being presenting is heavily inspired (surprisingly) by the general
+concept of [processes](https://en.wikipedia.org/wiki/Process_(computing)).
 
-Each Process manages its logic, holds its local state, and makes intelligent decisions on when and how to dispatch a 
-pure repesentation of such data to the rest of the Application to be rendered efficiently. Keep 
+Each Process manages its logic, holds its local state, and makes intelligent decisions on when and how to dispatch a
+pure repesentation of such data to the rest of the Application to be rendered efficiently. Keep
 the logic out of your views.
 
 ### Package Dependencies
@@ -27,21 +27,16 @@ $ npm install --save redux-saga-process
 
 # Overview
 
-Processes should remain a "pure environment" with a specific purpose or intent.  They 
-run as daemons in most cases which will live and respond throughout the lifetime of the 
-application.  
+Processes should remain a "pure environment" with a specific purpose or intent.  They
+run as daemons in most cases which will live and respond throughout the lifetime of the
+application.
 
-Processes are run as sagas using the [redux-saga](https://github.com/redux-saga/redux-saga) 
-library.  They may also be configured to reduce a portion of your [redux](https://github.com/reactjs/redux) 
-store, providing a means for dispatching a pure representation of our data to be rendered by our 
+Processes are run as sagas using the [redux-saga](https://github.com/redux-saga/redux-saga)
+library.  They may also be configured to reduce a portion of your [redux](https://github.com/reactjs/redux)
+store, providing a means for dispatching a pure representation of our data to be rendered by our
 view-layer.
 
-> **Note:** This package should be considered a work-in-progress and should be tested thoroughly 
-> at this point before using in your projects.  We just decoupled the whole package from our 
-> app(s) so some bugs may remain that need to be ironed out (although we haven't run into any with our 
-> tests at this time).
-
-# Migrating to 0.12
+# Migrating to version > 0.12
 
 Note that 0.12 no longer exports "default" and instead exports the named module "Process".
 
@@ -53,20 +48,20 @@ import Process from 'redux-saga-process'
 import { Process } from 'redux-saga-process'
 ```
 
-## Examples 
+## Examples
 
-Here are a few examples of some simple processes which are being used today.  When built
-properly, a process should be a completely independent "module" which could be plugged 
+Here are a [few examples of some simple processes](https://github.com/Dash-OS/redux-saga-process/tree/master/examples) which are being used today.  When built
+properly, a process should be a completely independent "module" which could be plugged
 into any other app.  This should enable sharing of logic between your apps and/or each others.
 
-- [Network Monitor Process](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/networkMonitor/networkMonitor.js) - this shows 
- most of the options available in use.  We specify this as a client-rendered process only, reduce part of our store, and observer push-style 
+- [Network Monitor Process](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/networkMonitor/networkMonitor.js) - this shows
+ most of the options available in use.  We specify this as a client-rendered process only, reduce part of our store, and observer push-style
  events.  In use we do a bit more monitoring of different events, but stripped some of that out to make it more direct of an example.
-- [Action Logger](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/actionLogger/actionLogger.js) - A minimal process which simply 
-  logs any actions dispatched.  
-- [Redux Persistor](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/reduxPersistor/reduxPersistor.js) - Handles the management of 
+- [Action Logger](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/actionLogger/actionLogger.js) - A minimal process which simply
+  logs any actions dispatched.
+- [Redux Persistor](https://github.com/Dash-OS/redux-saga-process/blob/master/examples/reduxPersistor/reduxPersistor.js) - Handles the management of
   saving application data to persistent storage via [redux-persist](https://github.com/rt2zz/redux-persist) (in our case we use localForage).
-
+- [Firebase Listeners](https://github.com/Dash-OS/redux-saga-process/tree/master/examples/firebase) - Firebase Setup & Listeners
 
 ***
 
@@ -74,7 +69,7 @@ into any other app.  This should enable sharing of logic between your apps and/o
 
 
 ```javascript
-import Process from 'redux-saga-process'
+import { Process } from 'redux-saga-process'
 class MyProcess extends Process { /* ... */ }
 ```
 
@@ -82,13 +77,13 @@ class MyProcess extends Process { /* ... */ }
 
 #### Building your Processes
 
-Before we [create our Redux Store](http://redux.js.org/docs/basics/Store.html#store) we should start 
-by building our processes.  During its build phase, the properties of each Process will be parsed and 
-an environment will be created for each.  
+Before we [create our Redux Store](http://redux.js.org/docs/basics/Store.html#store) we should start
+by building our processes.  During its build phase, the properties of each Process will be parsed and
+an environment will be created for each.
 
 Below we show one example of how you may organize your processes.  We have a root
-folder which has an index.js file that exports each "category" folder.  This folder 
-then exports each process that should be built.  With this setup, processes can be 
+folder which has an index.js file that exports each "category" folder.  This folder
+then exports each process that should be built.  With this setup, processes can be
 thought of as "threads" while each category folder would represent an overall process.
 
 ```
@@ -102,10 +97,10 @@ thought of as "threads" while each category folder would represent an overall pr
 > |---- ./index.js
 ```
 
-> ***Note:*** When you build your processes, the library will search up to two levels deep for classes that can be 
+> ***Note:*** When you build your processes, the library will search up to two levels deep for classes that can be
 > built and build any discovered processes.
 
-Given the above configuration, we would then build our processes easily enough.  We would 
+Given the above configuration, we would then build our processes easily enough.  We would
 simply do the following:
 
 ```javascript
@@ -119,12 +114,12 @@ const processes = buildProcesses(processCategories)
 
 #### Adding your Processes Reducers (Optional)
 
-When your Process defines the [static reducer](https://github.com/Dash-OS/redux-saga-process#static-reducer) property, 
-a redux-style reducer will be built and added to the list of reducers for you.  This is accomplished by 
-combining the reducers returned by ```buildProcesses``` (via Redux's [combineReducers](http://redux.js.org/docs/api/combineReducers.html)).  These 
+When your Process defines the [static reducer](https://github.com/Dash-OS/redux-saga-process#static-reducer) property,
+a redux-style reducer will be built and added to the list of reducers for you.  This is accomplished by
+combining the reducers returned by ```buildProcesses``` (via Redux's [combineReducers](http://redux.js.org/docs/api/combineReducers.html)).  These
 reducers are found on the responses "processReducers" property.
 
-> ***Tip:*** If multiple processes specify the same reducer name, they will be merged in the order they 
+> ***Tip:*** If multiple processes specify the same reducer name, they will be merged in the order they
 > were created. This is handled by using the [arrayMapReducer](https://github.com/Dash-OS/redux-saga-process#arraymapreducerinitialstate-reducerarray-context) generator from [reducerGenerators.js](https://github.com/Dash-OS/redux-saga-process/blob/master/src/lib/reducerGenerators.js).
 
 ```javascript
@@ -144,8 +139,8 @@ const rootReducer = combineReducers({
 
 #### Running your Processes
 
-Now that we have built our processes we need to run them.  This is done from within your 
-[root redux-saga](https://redux-saga.github.io/redux-saga/docs/introduction/BeginnerTutorial.html). 
+Now that we have built our processes we need to run them.  This is done from within your
+[root redux-saga](https://redux-saga.github.io/redux-saga/docs/introduction/BeginnerTutorial.html).
 
 ```javascript
 // configureSagas.js
@@ -160,13 +155,13 @@ function* root() {
 export default root
 ```
 
-> Interally, each Process uses the [spawn](https://redux-saga.github.io/redux-saga/docs/api/index.html#spawncontext-fn-args) 
-> method to create an independent frame of execution that should not be affected by your other 
+> Interally, each Process uses the [spawn](https://redux-saga.github.io/redux-saga/docs/api/index.html#spawncontext-fn-args)
+> method to create an independent frame of execution that should not be affected by your other
 > sagas, processes, and/or the rest of your application.
 
 # Building your Processes
 
-So now lets look at what a Process actually looks like, and what it can do for us. As 
+So now lets look at what a Process actually looks like, and what it can do for us. As
 shown above we start by building an ES6 class which extends ```Process```:
 
 ```javascript
@@ -193,19 +188,19 @@ we are using the babel [transform-class-properties](https://babeljs.io/docs/plug
 class MyProcess extends Process {
   static config = {
     /* Process Configuration Example */
-      // enabled?  Setting to false will stop the process from being built and/or added 
+      // enabled?  Setting to false will stop the process from being built and/or added
       // to the application. (default: true)
     enabled: true
       // providing this will indicate that we wish to reduce part of the redux store
     reduces: 'myState',
       // Should we run on the server side as well? (default: true)
-    ssr: true 
+    ssr: true
   }; // don't forget to add the semi-colon!
 }
 ```
 
-Providing a config property allows you to modify how the process will be built and handled. 
-We plan to utilize this property to add flexibility and features in the future.  Below are 
+Providing a config property allows you to modify how the process will be built and handled.
+We plan to utilize this property to add flexibility and features in the future.  Below are
 the properties that can be provided within this property.
 
 
@@ -216,15 +211,15 @@ the properties that can be provided within this property.
 | **ssr**         | boolean | true/false if this process should run on the server as well as the client (default: true) |
 
 > ##### Overlapping Reducer Names / Reducer Merge
-> 
-> There are times that we needed multiple processes to reduce against the same key within our 
-> state.  If you define multiple processes that reduce the same state we will merge them into 
+>
+> There are times that we needed multiple processes to reduce against the same key within our
+> state.  If you define multiple processes that reduce the same state we will merge them into
 > a single reducer and also attempt to merge and ```initialState``` that is provided.
 >
-> This is done internally by building a reducer which reduces an array of reducers while passing 
+> This is done internally by building a reducer which reduces an array of reducers while passing
 > and merging initialState and any reduction filters we have specified.
-> 
-> It is probably inadvisable to do this as it can cause conflicts.  It is generally a better 
+>
+> It is probably inadvisable to do this as it can cause conflicts.  It is generally a better
 > idea to have each process reduce its own key within your state.
 
 ***
@@ -238,8 +233,8 @@ class MyProcess extends Process {
   static config = {
       // enabled reducing a portion of the redux store
     reduces: 'myState'
-  }; 
-  
+  };
+
   static initialState = {
     /* Initial 'myState' Reducer State */
     myKey: 'myValue'
@@ -247,12 +242,12 @@ class MyProcess extends Process {
 }
 ```
 
-When we are adding a reducer we may want to define an initialState that the 
-store should use.  This is done by providing the initialState property as 
-shown above.  When your reducer is built we will pass the initialState as the 
-state on your first reduction. 
+When we are adding a reducer we may want to define an initialState that the
+store should use.  This is done by providing the initialState property as
+shown above.  When your reducer is built we will pass the initialState as the
+state on your first reduction.
 
-> ***Tip:*** We also return the compiled initialState of all your processes as a result of 
+> ***Tip:*** We also return the compiled initialState of all your processes as a result of
 > the ```buildProcesses``` call.
 
 ***
@@ -267,14 +262,14 @@ import { MY_TYPE, MY_OTHER_TYPE } from '../constants'
 class MyProcess extends Process {
   static config = {
     reduces: 'myState'
-  }; 
-  
+  };
+
   static initialState = {
     /* Initial 'myState' Reducer State */
     myKey: 'myValue',
     anotherKey: 'anotherValue'
   };
-  
+
   // filters for MY_TYPE and MY_OTHER_TYPE
   static reducer = {
     [MY_TYPE]: (state, action) => ({
@@ -289,12 +284,12 @@ class MyProcess extends Process {
 }
 ```
 
-We use "higher-order-reducers" to build special reducers that are used to filter the appropriate 
-actions into your processes reducers (and trigger your sagas if specified).  Your reducer property 
-can be either a ```Reducer Function``` which itself is a reducer, an ```Object Literal``` (as shown above) 
+We use "higher-order-reducers" to build special reducers that are used to filter the appropriate
+actions into your processes reducers (and trigger your sagas if specified).  Your reducer property
+can be either a ```Reducer Function``` which itself is a reducer, an ```Object Literal``` (as shown above)
 which maps specific types into a reducer function, or an ```Array``` where each element itself is a reducer.
 
-Object reducers may also use wildcard matching, and a special shortcut is given that may be used. 
+Object reducers may also use wildcard matching, and a special shortcut is given that may be used.
 
 ```javascript
 // shows shorthand method of specifying the type to filter for.  this is
@@ -303,14 +298,14 @@ Object reducers may also use wildcard matching, and a special shortcut is given 
 class MyProcess extends Process {
   static config = {
     reduces: 'myState'
-  }; 
-  
+  };
+
   static initialState = {
     /* Initial 'myState' Reducer State */
     myKey: 'myValue',
     anotherKey: 'anotherValue'
   };
-  
+
   // filters for MY_TYPE and MY_OTHER_TYPE
   static reducer = {
     myType: (state, action) => ({
@@ -326,10 +321,10 @@ class MyProcess extends Process {
 ```
 
 
-> ***Note:*** Our higher-order-reducers will automatically return an unmodified state if no types match your specified 
+> ***Note:*** Our higher-order-reducers will automatically return an unmodified state if no types match your specified
 > handlers.
 
-> ***Note:*** Reducers should be pure.  You can not access ```this``` within them. Instead 
+> ***Note:*** Reducers should be pure.  You can not access ```this``` within them. Instead
 > you should pass any desired properties within a dispatched action.
 
 
@@ -358,17 +353,17 @@ static reducer = function(state, action) {
 <details>
   <summary><b>An Example of a Higher-Order-Reducer Generator (Click to Expand)</b></summary><p>
 <br />
-This is not strictly important to see or understand, but for those of you that are interested 
-in how we are building the reducers below is an example of the object filter reducer we showed 
+This is not strictly important to see or understand, but for those of you that are interested
+in how we are building the reducers below is an example of the object filter reducer we showed
 in the first example.
 
 
 ```javascript
-const objectMapReducerGenerator = 
-  (initialState, handlers = {}) => 
-    (state = initialState, action) => 
+const objectMapReducerGenerator =
+  (initialState, handlers = {}) =>
+    (state = initialState, action) =>
       (
-        ! action || ! action.type || ! handlers[action.type] && state || 
+        ! action || ! action.type || ! handlers[action.type] && state ||
         handlers[action.type](state, action)
       )
 ```
@@ -385,24 +380,24 @@ import { put } from 'redux-saga/effects'
 import { MY_TYPE, RECEIVED_ACTION } from '../constants'
 
 class MyProcess extends Process {
-  
+
   static actionRoutes = {
-    [MY_TYPE]: 'myMethod'  
+    [MY_TYPE]: 'myMethod'
   };
-  
+
   * myMethod(action) {
     yield put({ type: RECEIVED_ACTION })
   }
-  
+
 }
 ```
 
-Action Routes allow us to define types that we are interested in handling as a 
-side-effect and maps it to a method within your process.  If your method is a 
+Action Routes allow us to define types that we are interested in handling as a
+side-effect and maps it to a method within your process.  If your method is a
 generator you can use any of the redux-saga API via yield within the method.
 
-actionRoutes support wildcard matching and the shorthand type defintion found 
-in other properties.  Below we match using the shorthand property and route 
+actionRoutes support wildcard matching and the shorthand type defintion found
+in other properties.  Below we match using the shorthand property and route
 any types that start with "ACTION_" to our actionHandler.
 
 ```javascript
@@ -410,16 +405,16 @@ import { put } from 'redux-saga/effects'
 import { RECEIVED_ACTION } from '../constants'
 
 class MyProcess extends Process {
-  
+
   static actionRoutes = {
     myType: 'myMethod',
     'ACTION_*': 'actionHandler'
   };
-  
+
   * myMethod(action) {
     yield put({ type: RECEIVED_ACTION })
   }
-  
+
   * actionHandler(action) {
     /* Handle types starting with ACTION_ */
   }
@@ -432,32 +427,32 @@ class MyProcess extends Process {
 
 ```javascript
 class MyProcess extends Process {
-  
+
   static actionCreators = {
     trigger: [ 'action' ],
     myType:  [ 'username', 'password' ],
     fooType: { staticKey: 'staticValue' },
     fnType:  (value, props, obj) => ({ value, props, ...obj })
   };
-  
+
   * processStarts() {
-  
+
     yield* this.dispatch('trigger', 'this')
       // dispatches action to reducers ->
       //  { type: 'TRIGGER', action: 'this' }
-      
+
     yield* this.dispatch('myType', 'myUsername', 'myPassword', { mergedKey: 'value' } )
       // dispatches action to reducers ->
       //  { type: 'MY_TYPE', username: 'myUsername', password: 'myPassword', mergedKey: 'value' }\
-      
+
     yield* this.dispatch('fooType', { mergedKey: 'value' })
       // dispatches action to reducers ->
       //  { type: 'FOO_TYPE', staticKey: 'staticValue', mergedKey: 'value' }
-      
+
     yield* this.dispatch('fnType', 'foo', 'bar', { mergedKey: 'value' })
       // dispatches action to reducers ->
       //  { type: 'FN_TYPE', value: 'foo', props: 'bar', mergedKey: 'value' }
-      
+
   }
 }
 ```
@@ -470,25 +465,25 @@ class MyProcess extends Process {
 class MyProcess extends Process {
   static config = {
     reduces: 'myState'
-  }; 
-  
+  };
+
   static initialState = {
     /* Initial 'myState' Reducer State */
     foo: { nested: 'bar' },
     baz: 'qux'
   };
-  
+
   static selectors = {
     local:   [ myState => myState.foo ],
     global:  [ state => state, state => state.anotherKey.foo ],
     global2: [ state => state.myState, myState => myState.baz ] // identical to above
-    composed: [ 
-      state => state.myState.foo.nested, 
+    composed: [
+      state => state.myState.foo.nested,
       state => state.myState.baz,
       (foo, baz) => ({ foo, baz })
     ],
   };
-  
+
   * processStarts() {
     const local  = yield* this.select('local') // myValue
     const global = yield* this.select('global')     // value of foo in anotherState key
@@ -500,18 +495,16 @@ class MyProcess extends Process {
 }
 ```
 
-Currently powered by the [reselect](https://github.com/reactjs/reselect) library (although at some point 
-we would like to allow for plugins instead), selectors allow us to capture the state of our Application 
-within our processes.  While it is generally a best practice to handle state within the process for 
-most things related to our processes encapsulated logic (example: ```this.state```), 
-it can be helpful to capture our state. 
+Currently powered by the [reselect](https://github.com/reactjs/reselect) library (although at some point
+we would like to allow for plugins instead), selectors allow us to capture the state of our Application
+within our processes.  While it is generally a best practice to handle state within the process for
+most things related to our processes encapsulated logic (example: ```this.state```),
+it can be helpful to capture our state.
 
-You can use the ```this.select``` function to conduct operations using the pre-built selectors.  However, 
+You can use the ```this.select``` function to conduct operations using the pre-built selectors.  However,
 you can also dynamically specify selectors that were not built using the reselect package (using the selectors property).
 
-
-
-Under-the-hood this.select is simply calling redux-sagas [yield select(selector)](https://redux-saga.github.io/redux-saga/docs/api/index.html#selectselector-args) 
+Under-the-hood this.select is simply calling redux-sagas [yield select(selector)](https://redux-saga.github.io/redux-saga/docs/api/index.html#selectselector-args)
 and feeding it a [reselect selector](https://github.com/reactjs/reselect#createselectorinputselectors--inputselectors-resultfunc)
 
 ***
@@ -522,12 +515,12 @@ import { put } from 'redux-saga/effects'
 import { CANCEL_PROCESS, USER_LOGOUT } from '../constants'
 
 class MyProcess extends Process {
-  
+
   static cancelTypes = [
     { type: CANCEL_PROCESS },
     USER_LOGOUT
   ];
-  
+
   * shouldProcessCancel(action) {
     switch(action.type) {
       case USER_LOGOUT: return true
@@ -536,17 +529,55 @@ class MyProcess extends Process {
       default: return false
     }
   }
-  
+
   * processCancels(action) {
     /* Conduct Cleanup */
   }
-  
+
   * processStarts() {
     /* Cancel Ourself on Process Startup (As Example) */
     yield put({ type: CANCEL_PROCESS, name: this.name })
   }
-  
+
 }
+```
+
+# Connecting to React Components
+
+When we want to connect actions and selectors provided by our processes, we have
+the ability to use the "statics" module.  This will essentially connect to the
+connect HOC that is provided - passing it the given processes public actions and/or
+selectors.
+
+You setup what actions and selectors should be public when defining your selectors
+or actions by prefixing them with "!" (otherwise all will be imported).
+
+```javascript
+import React, { Component } from 'react'
+import { connect } from 'react-connect'
+import statics from 'redux-saga-process/statics'
+
+class DashboardGrid extends Component {
+  render() {
+    // ...
+  }
+}
+
+export default statics(
+  {
+    grid: ['actions', 'selectors'],
+    processTwo: ['actions']
+  },
+  ({ selectors, actions }) => (
+    connect(
+      state => ({
+        grid: selectors.grid(state)
+      }),
+      actions
+    )(DashboardGrid)
+  ),
+  { prefixed: false }
+)
 ```
 
 # Process API
@@ -561,9 +592,9 @@ and maintain.
 
 ## Process Task System
 
-Tasks are essential to building powerful & asynchronous workflows within your 
-projects.  With the ```Process Task API``` it is simple to manage and maintain 
-your tasks. 
+Tasks are essential to building powerful & asynchronous workflows within your
+projects.  With the ```Process Task API``` it is simple to manage and maintain
+your tasks.
 
 Here are a few key points about the Task API:
 
@@ -571,13 +602,13 @@ Here are a few key points about the Task API:
 - If a task with the same `category` and `id` is created, the previous is automatically cancelled.
 - You can cancel a task by its `category` and `id`
 - You can cancel all tasks in a `category`
-- You can cancel all tasks 
+- You can cancel all tasks
 - You can register callbacks to occur when a task is complete
 
-> ***Note:*** This API is really a convenience wrapper around the ```redux-saga``` 
-> [task](https://redux-saga.github.io/redux-saga/docs/api/index.html#task) system 
-> implemented using their [fork](https://redux-saga.github.io/redux-saga/docs/api/index.html#forkfn-args) 
-> feature.  
+> ***Note:*** This API is really a convenience wrapper around the ```redux-saga```
+> [task](https://redux-saga.github.io/redux-saga/docs/api/index.html#task) system
+> implemented using their [fork](https://redux-saga.github.io/redux-saga/docs/api/index.html#forkfn-args)
+> feature.
 
 ***
 
@@ -642,13 +673,13 @@ yield* this.task.cancelAll()
 
 ## Process Observables
 
-Used to handle "push" events rather than "pull" events.  For example, we use 
-this API heavily for handling [Firebase](https://www.firebase.com) real-time 
+Used to handle "push" events rather than "pull" events.  For example, we use
+this API heavily for handling [Firebase](https://www.firebase.com) real-time
 events within our processes.
 
-Observables include a buffer, a cancellable promise, and more.  We will add 
-more information about how these works as we can, but feel free to try them 
-out! 
+Observables include a buffer, a cancellable promise, and more.  We will add
+more information about how these works as we can, but feel free to try them
+out!
 
 > More Information Coming Soon...
 
@@ -678,9 +709,9 @@ out!
 
 # Reducer Generators
 
-Internally we use ```reducer generators``` to build reducers which reduce reducers. 
-This allows us to filter actions into our methods efficiently and allows us to build much 
-of the syntax we use for the static properties such as ```actionRoutes```.  You can 
+Internally we use ```reducer generators``` to build reducers which reduce reducers.
+This allows us to filter actions into our methods efficiently and allows us to build much
+of the syntax we use for the static properties such as ```actionRoutes```.  You can
 import these and use them elsewhere if desired.
 
 ```javascript
@@ -713,7 +744,7 @@ const reducer = objectMapReducer(
 
 ### arrayMapReducer(initialState, reducerArray, context)
 
-Reduces an array of reducers.  
+Reduces an array of reducers.
 
 ```javascript
 const reducer = arrayMapReducer(
@@ -736,8 +767,8 @@ const reducer = arrayMapReducer(
 
 ### reducerReducer(initialState, reducer, context)
 
-A reducer which reduces a reducer.  The main purpose of this generator is to allow us 
-to inject information into the reducer before executing.  This is mostly used internally 
+A reducer which reduces a reducer.  The main purpose of this generator is to allow us
+to inject information into the reducer before executing.  This is mostly used internally
 but you may find a use for it.
 
 ```javascript

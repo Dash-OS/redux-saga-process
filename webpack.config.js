@@ -8,20 +8,20 @@ const BabiliPlugin = require('babili-webpack-plugin');
 const NodeExternals = require('webpack-node-externals');
 
 if (process.env.NODE_ENV === 'production') {
-  // plugins.push(new webpack.optimize.UglifyJsPlugin({
-  //   sourceMap: false,
-  //   compress: {
-  //     screw_ie8: true,
-  //     warnings: false,
-  //   },
-  //   mangle: {
-  //     screw_ie8: true,
-  //   },
-  //   output: {
-  //     comments: false,
-  //     screw_ie8: true,
-  //   },
-  // }));
+  plugins.push(new webpack.optimize.UglifyJsPlugin({
+    sourceMap: false,
+    compress: {
+      screw_ie8: true,
+      warnings: false,
+    },
+    mangle: {
+      screw_ie8: true,
+    },
+    output: {
+      comments: false,
+      screw_ie8: true,
+    },
+  }));
   outputFile = libraryName + '.min.js';
   plugins.push(new webpack.LoaderOptionsPlugin({
     minimize: true,
@@ -57,7 +57,7 @@ module.exports = {
       'node_modules'
     ],
   },
-  
+
   plugins: plugins,
 
   module: {
@@ -70,9 +70,9 @@ module.exports = {
           ],
         use: [ {
           loader: 'babel-loader',
-          
+
           options: {
-            // plugins: ['transform-runtime', 'transform-class-properties'],
+            plugins: ['transform-class-properties'],
             presets: [
               ['env', {
                 modules: false,
@@ -89,12 +89,12 @@ module.exports = {
             }
           }
         } ]
-        
-        
+
+
       }
     ]
   },
-  
+
   externals: [ NodeExternals() ]
-  
+
 }

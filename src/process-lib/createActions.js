@@ -21,8 +21,8 @@ const buildCreator = (type, keys) => (...args) => {
     }
   } else if ( typeof keys === 'function' ) {
     compiled = { ...compiled, ...keys(...args) }
-  } else if ( isObjLiteral(keys) ) { 
-    compiled = { ...compiled, ...keys, ...(isObjLiteral(args[0]) && args[0]) } 
+  } else if ( isObjLiteral(keys) ) {
+    compiled = { ...compiled, ...keys, ...(isObjLiteral(args[0]) && args[0]) }
   } else { throw new Error('Dont know how to handle action: ', type, keys, args) }
   return compiled
 }
@@ -31,7 +31,7 @@ const buildActions = (actions) => {
   const compiled = { public: {}, private: {} }
   for ( let _type in actions ) {
     const scope = _type.startsWith('!') ? 'private' : 'public',
-          type  = _type.replace(/^!/, "")
+          type  = _type.replace(/^!/, '')
     compiled[scope][type] = buildCreator(toReduxType(type), actions[_type])
   }
   return compiled

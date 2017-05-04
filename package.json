@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-process",
-  "version": "0.12.2",
+  "version": "0.13.0",
   "description": "Processes for Redux-Saga",
   "main": "dist/redux-saga-process.js",
   "scripts": {
@@ -47,6 +47,7 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-loader": "^7.0.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-preset-babili": "^0.0.12",
     "babel-preset-env": "^1.4.0",
     "babili-webpack-plugin": "^0.0.11",
@@ -59,7 +60,7 @@
     "webpack-node-externals": "^1.5.4",
     "yargs": "^7.1.0"
   },
-  "dependencies": {
+  "peerDependencies": {
     "react": "^15.5.4",
     "redux-saga": "^0.14.8",
     "reselect": "^3.0.0"

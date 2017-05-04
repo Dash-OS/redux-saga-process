@@ -13,23 +13,23 @@ import { Wildcard } from './wildcard'
 //   //.pattern('*NETWORK*')
 //   //.filter(['One NETWORK', 'NETWORK', 'foo', 'bar', 'network'])
 //   //.filter(['NETWORK', 'REQUEST', 'FOO'])
-  
+
 // console.log(WC)
 
-const emptyReducer = 
-  ( initialState = {}, reducers ) =>  ( state = initialState, action ) => state
-  
-const arrayMapReducer = 
+const nilReducer =
+  ( initialState = {} ) =>  ( state = initialState ) => state
+
+const arrayMapReducer =
   ( initialState, reducers, pcontext ) =>  ( state = initialState, action, context ) =>
   ( reducers.reduce( (p, c)  => c(p, action, { ...pcontext, ...context }), state ) )
 
-const objectMapReducer = 
-  (initialState, handlers = {}, pcontext) => (state = initialState, action, context) => 
+const objectMapReducer =
+  (initialState, handlers = {}, pcontext) => (state = initialState, action, context) =>
   {
     if ( ! action || ! action.type || ! handlers[action.type]  ) return state
     return handlers[action.type](state, action, { ...pcontext, ...context })
   }
-  
+
 const wildcardMapReducer =
   (initialState, handlers = {}, pcontext) => {
     const wcMatcher = new Wildcard(handlers)
@@ -42,11 +42,11 @@ const wildcardMapReducer =
         , state )
       }
   }
-  
+
 const reducerReducer =
   ( initialState, reducer, pcontext ) => ( state = initialState, action, context ) =>
   ( reducer(state, action, { ...pcontext, ...context }) )
-  
+
 const nestedObjectMapReducer =
   (initialState, handlers = {}, pcontext ) => ( state = initialState, action, context) =>
   {
@@ -60,12 +60,12 @@ const nestedObjectMapReducer =
       [path]: childState
     }
   }
-  
-export { 
-  emptyReducer,
-  arrayMapReducer, 
-  objectMapReducer, 
-  nestedObjectMapReducer, 
-  reducerReducer, 
+
+export {
+  nilReducer,
+  arrayMapReducer,
+  objectMapReducer,
+  nestedObjectMapReducer,
+  reducerReducer,
   wildcardMapReducer
 }

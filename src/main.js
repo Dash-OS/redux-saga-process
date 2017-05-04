@@ -1,8 +1,8 @@
-
-export { 
-  runProcesses, 
+export {
+  runProcesses,
   runProcess,
   buildProcesses,
+  reloadProcess,
   processContext,
 } from './process-lib/effects'
 
@@ -12,7 +12,7 @@ export {
 } from './process-lib/helpers'
 
 export {
-  createActions, 
+  createActions,
   buildCreator
 } from './process-lib/createActions'
 
@@ -21,7 +21,7 @@ export {
   hasWildcard
 } from './process-lib/wildcard'
 
-export { 
+export {
   default as Process
 } from './process-lib/process'
 

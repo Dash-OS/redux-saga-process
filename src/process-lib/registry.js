@@ -1,7 +1,7 @@
 
 const Errors = {
   exportsType() {
-    throw new Error('[PROCESS] | [static exports] must be an Array of properties to export') 
+    throw new Error('[PROCESS] | [static exports] must be an Array of properties to export')
   },
   recordsNotFound(...args) {
     throw new Error('[PROCESS] | Records Not Found: ', ...args)
@@ -11,7 +11,6 @@ const Errors = {
 const RecordRegistry = {}
 
 class RecordContext {
-  
   constructor(proc) {
     const { config } = proc
     const { pid } = config
@@ -37,10 +36,10 @@ class RecordContext {
 const registerRecord = proc => {
   if ( ! proc.config.pid ) { return }
   const Record = new RecordContext(proc)
-  RecordRegistry[Record.pid] = 
+  RecordRegistry[Record.pid] =
     Array.isArray(RecordRegistry[Record.pid])
       ? [ ...RecordRegistry[Record.pid], Record ]
-      : [ Record ] 
+      : [ Record ]
 }
 
 const BUILD = {
@@ -49,6 +48,7 @@ const BUILD = {
                       return prev
                     }, {} )
 }
+
 /* Reduce all records by pid, merge props across them */
 const getRecord = (id, props, config, accum) => {
   return RecordRegistry[id].reduce( (p, c) => {
@@ -57,20 +57,19 @@ const getRecord = (id, props, config, accum) => {
         const value = BUILD[prop]
           ? BUILD[prop](c.exported[prop])
           : c.exported[prop]
-        
         p[prop] = config.prefixed === true
           ? { ...p[prop], [id]: value }
           : { ...p[prop], ...value }
       }
     })
-    return p 
+    return p
   }, accum )
 }
 
 const buildSelector = () => {
-  
+
 }
-  
+
 
 /* Reduce an object container pid/selector pairs */
 /* { modals<pid>: ['selectors', 'actions']<selected> } */
@@ -79,7 +78,7 @@ function getRecords(records, config, accum = {}) {
   return Object.keys(records)
     .reduce( (p, c) => getRecord(c, records[c], config, p), accum )
 }
-  
+
 
 // getRecords({
 //   modals: [ 'selectors' ]
