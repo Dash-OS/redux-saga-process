@@ -137,6 +137,48 @@ const rootReducer = combineReducers({
 
 ***
 
+#### Hot Reloading Processes
+
+We have the ability to hot reload our processes.  RSP will pass the `state` object
+if it exists to the newly built process through the constructor.  This allows you to
+handle it however you wish based on what the process does.
+
+This allows us to hot reload the reducers **AND** the processes while maintaining state
+across all of them.
+
+```js
+// when we run our sagas
+let sagaTask = sagaMiddleware.run(rootSaga)
+// then...
+if ( module.hot ) {
+  module.hot.accept('./reducers', () => {
+    sagaTask.cancel()
+    sagaTask.done.then(() => {
+      // dynamic import reducers and sagas
+      Promise.all([
+        import('./reducers'),
+        import('../ui/shared/sagas')
+      ]).then( ([ new_reducers, new_sagas ]) => {
+        // replace the reducers with the new reducers - this will
+        // also rebuild our sagas efficiently (it doesnt re-build what it doesnt
+        // have to).
+        store.replaceReducer(new_reducers.default)
+        // Update our sagaTask with the new task and run our sagas
+        sagaTask = sagaMiddleware.run(new_sagas.default)
+        // in case we want to handle the hot reload in our processes
+        // (simply add an actionRoute for "hotReloaded")
+        store.dispatch({
+          type: 'HOT_RELOADED'
+        })
+      })
+    })
+  })
+  module.hot.accept('../ui/shared/sagas', () => {
+    // Accept changes to all of our sagas!
+  })
+}
+```
+
 #### Running your Processes
 
 Now that we have built our processes we need to run them.  This is done from within your
