@@ -1,4 +1,4 @@
-
+import { hasWildcard } from './wildcard'
 var props = {
   compiled: false,
   mergeReducers: true,
@@ -19,7 +19,8 @@ const isObjLiteral =
 
 const toReduxType = str => formatType(str)
 
-const isReduxType = str => /\b[A-Z]+(_[A-Z]+)*\b/.test(str)
+// Allow for wildcard in the types
+const isReduxType = str => /^[A-Z\*]+([_\*][A-Z\*]+)*?$/.test(str)
 
 const cancellablePromise = (p, onCancel, CANCEL) => {
   p[CANCEL] = onCancel // eslint-disable-line
@@ -45,6 +46,7 @@ const cancellablePromise = (p, onCancel, CANCEL) => {
   systemRX -> 'SYSTEM_RX'
 */
 function formatType (type) {
+  let wildcardType = hasWildcard(type)
   if ( isReduxType(type) ) { return type }
   var buffer = '',
       list = type
@@ -80,6 +82,8 @@ function formatType (type) {
           } else { buffer += '_' + e }
         } else { buffer += '_' + e }
       }
+    } else if ( e.includes('*') ) {
+      buffer += e
     }
     wasCapital = isCapital
   }

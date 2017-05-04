@@ -202,7 +202,7 @@ class Process {
             return
           }
         } else {
-          yield apply(this, this[route], [ action ])
+          return yield apply(this, this[route], [ action ])
         }
         if ( config.wildcard && this.config.matchWildcard !== false ) {
           const matches = WC.pattern(actionRoutes).search(action.type)

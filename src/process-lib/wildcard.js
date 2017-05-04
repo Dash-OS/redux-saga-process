@@ -1,15 +1,15 @@
 const isObjLiteral =
   o => ( o !== null && ! Array.isArray(o) && typeof o !== 'function' && typeof o === 'object' )
 
-const REXPS = {
-  hasWildcard: /\*/,
-}
+// const REXPS = {
+//   hasWildcard: /\*/,
+// }
 
 const hasWildcard = (pattern) => (
   typeof pattern === 'string'
-    ? REXPS.hasWildcard.test(pattern)
+    ? pattern.includes('*')
     : Array.isArray(pattern)
-      ? pattern.some(x => REXPS.hasWildcard.test(x) )
+      ? pattern.some(x => x.includes('*') )
       : isObjLiteral(pattern)
         ? hasWildcard(Object.keys(pattern))
         : false
