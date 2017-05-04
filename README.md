@@ -139,8 +139,8 @@ const rootReducer = combineReducers({
 
 #### Hot Reloading Processes
 
-We have the ability to hot reload our processes.  RSP will pass the `state` object
-if it exists to the newly built process through the constructor.  This allows you to
+We have the ability to hot reload our processes.  RSP will pass the `state` object,
+if it exists, to the newly built process through the constructor.  This allows you to
 handle it however you wish based on what the process does.
 
 This allows us to hot reload the reducers **AND** the processes while maintaining state
