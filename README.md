@@ -252,7 +252,7 @@ the properties that can be provided within this property.
 
 | Property        | Type(s)           | Description  |
 | -------------   |:-------------:| ----- |
-| **pid*          | _String_  | If using the `statics` connector, you will need to define a `pid` to use while importing a proceses exported values. |
+| **pid**          | _String_  | If using the `statics` connector, you will need to define a `pid` to use while importing a proceses exported values. |
 | **enabled**     | _Boolean_ | true/false if this process is enabled.  If set to "false" the process will be ignored on startup. |
 | **reduces**         | _String_ || _Array_ | a string indicating the name of the [reducer](http://redux.js.org/docs/basics/Reducers.html) this process should reduce. Or an array to provide multiple reducer keys.  <br /> <blockquote> ***Note:*** If this property is not defined a reducer will not be generated. </blockquote> |
 | **ssr**         | _Boolean_ | true/false if this process should run on the server as well as the client (default: true) |
