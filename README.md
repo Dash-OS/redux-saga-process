@@ -232,12 +232,14 @@ we are using the babel [transform-class-properties](https://babeljs.io/docs/plug
 class MyProcess extends Process {
   static config = {
     /* Process Configuration Example */
-      // enabled?  Setting to false will stop the process from being built and/or added
-      // to the application. (default: true)
+    // enabled?  Setting to false will stop the process from being built and/or added
+    // to the application. (default: true)
     enabled: true
-      // providing this will indicate that we wish to reduce part of the redux store
+    // providing this will indicate that we wish to reduce part of the redux store
     reduces: 'myState',
-      // Should we run on the server side as well? (default: true)
+      // or
+      // reduces: ['myState', 'myState2']
+    // Should we run on the server side as well? (default: true)
     ssr: true
   }; // don't forget to add the semi-colon!
 }
@@ -250,9 +252,10 @@ the properties that can be provided within this property.
 
 | Property        | Type(s)           | Description  |
 | -------------   |:-------------:| ----- |
-| **enabled**     | boolean | true/false if this process is enabled.  If set to "false" the process will be ignored on startup. |
-| **reduces**         | string | a string indicating the name of the [reducer](http://redux.js.org/docs/basics/Reducers.html) this process should reduce.  <br /> <blockquote> ***Note:*** If this property is not defined a reducer will not be generated. </blockquote> |
-| **ssr**         | boolean | true/false if this process should run on the server as well as the client (default: true) |
+| **pid*          | _String_  | If using the `statics` connector, you will need to define a `pid` to use while importing a proceses exported values. |
+| **enabled**     | _Boolean_ | true/false if this process is enabled.  If set to "false" the process will be ignored on startup. |
+| **reduces**         | _String_ || _Array_ | a string indicating the name of the [reducer](http://redux.js.org/docs/basics/Reducers.html) this process should reduce. Or an array to provide multiple reducer keys.  <br /> <blockquote> ***Note:*** If this property is not defined a reducer will not be generated. </blockquote> |
+| **ssr**         | _Boolean_ | true/false if this process should run on the server as well as the client (default: true) |
 
 > ##### Overlapping Reducer Names / Reducer Merge
 >
@@ -265,6 +268,15 @@ the properties that can be provided within this property.
 >
 > It is probably inadvisable to do this as it can cause conflicts.  It is generally a better
 > idea to have each process reduce its own key within your state.
+
+> ##### Defining Multiple Reducers for a Single Process
+>
+> Another option is to have a single process reduce multiple keys.  This is another feature which should
+> be used lightly, however, it can be very useful in certain situations that you need to be able to place
+> data in various places.
+>
+> When an array is provided, the reducer is expected to be an Object Literal where the keys are the key to reducer
+> and the values are any accept reducer type.
 
 ***
 
