@@ -6,7 +6,7 @@ var props = {
   wildcardMatch: true,
   ssr: true,
   hot: true,
-  log: false
+  log: true
 }
 
 const configProcess = config => ( config &&  ( props = { ...props, ...config } ) )

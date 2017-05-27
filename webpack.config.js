@@ -7,6 +7,7 @@ var plugins = [], outputFile;
 const BabiliPlugin = require('babili-webpack-plugin');
 const NodeExternals = require('webpack-node-externals');
 
+console.log('Env: ', process.env.NODE_ENV)
 if (process.env.NODE_ENV === 'production') {
   plugins.push(new webpack.optimize.UglifyJsPlugin({
     sourceMap: false,

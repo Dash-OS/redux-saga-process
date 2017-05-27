@@ -275,10 +275,14 @@ const parseReducer = (reducer) => {
 
 const buildSelectors = ({ selectors, config = {} }, compiled = {}) => {
   let deferredSelectors = []
-
-  const coreSelector = config.reduces
-    ? (state, props) => state[config.reduces]
-    : (state, props) => state
+  let coreSelector
+  if ( Array.isArray(config.reduces ) ) {
+    coreSelector = (state, props) => state
+  } else {
+    coreSelector = config.reduces
+      ? (state, props) => state[config.reduces]
+      : (state, props) => state
+  }
   if ( ! props.compiled && selectors ) {
     if ( ! compiled.selectors ) { compiled.selectors = { public: {}, private: {} } }
     for ( const _selector in selectors ) {

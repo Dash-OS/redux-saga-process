@@ -54,42 +54,46 @@ class Process {
     refs: {},
 
     log(type, msg, ...args) {
-      if ( processProps.log !== true ) { return }
-      let title = '', root = false
-      if ( ! this.__utils.groupStart ) {
-        title += `[RSP] | ${this.displayName} | `
-        root = true
-        this.__utils.groupStart = true
-      }
-      if ( args.length === 0 ) {
-        if ( root ) {
-          console.groupCollapsed(title, msg)
-            console.info('Process Context:', this)
-          console.groupEnd()
-          delete this.__utils.groupStart
-        } else { console.log(msg) }
-      } else {
-        if ( type === 'error' ) {
-          console.group(title, msg)
-          console.error(msg)
-        } else {
-          console.groupCollapsed(title, msg)
-        }
-
-        for ( let arg of args ) {
-          if ( typeof arg === 'function' ) {
-            arg.call(this, arg)
-          } else if ( typeof arg === 'string' ) {
-            this.__utils.log(type, arg)
-          } else {
-            this.__utils.log(type, ...arg)
+      try {
+          if ( processProps.log !== true ) { return }
+          let title = '', root = false
+          if ( ! this.__utils.groupStart ) {
+            title += `[RSP] | ${this.displayName} | `
+            root = true
+            this.__utils.groupStart = true
           }
-        }
-        if ( root ) {
-          console.info('Process Context:', this)
-          delete this.__utils.groupStart
-        }
-        console.groupEnd()
+          if ( args.length === 0 ) {
+            if ( root ) {
+              console.groupCollapsed(title, msg)
+                console.info('Process Context:', this)
+              console.groupEnd()
+              delete this.__utils.groupStart
+            } else { console.log(msg) }
+          } else {
+            if ( type === 'error' ) {
+              console.group(title, msg)
+              console.error(msg)
+            } else {
+              console.groupCollapsed(title, msg)
+            }
+
+            for ( let arg of args ) {
+              if ( typeof arg === 'function' ) {
+                arg.call(this, arg)
+              } else if ( typeof arg === 'string' ) {
+                this.__utils.log(type, arg)
+              } else {
+                this.__utils.log(type, ...arg)
+              }
+            }
+            if ( root ) {
+              console.info('Process Context:', this)
+              delete this.__utils.groupStart
+            }
+            console.groupEnd()
+          }
+      } catch (e) {
+        console.error(e.message)
       }
     },
 
@@ -475,11 +479,17 @@ class Process {
   // }
 
   * setState(state) {
-    this.state = {
-      ...this.state,
-      ...state
+    let update
+    for ( let key in state ) {
+      if ( this.state[key] === undefined || this.state[key] !== state[key] ) {
+        update = true
+        break
+      }
     }
+    if ( update === true ) { this.state = Object.assign({}, this.state, state) }
+    return update === true
   }
+
 }
 
 const getPattern = (_types, config) => {

@@ -1,12 +1,12 @@
 {
   "name": "redux-saga-process",
-  "version": "0.13.1",
+  "version": "1.0.0",
   "description": "Processes for Redux-Saga",
   "main": "dist/redux-saga-process.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --require co-mocha",
     "prepublish": "npm run build",
-    "build": "cross-env BABEL_ENV=production NODE_ENV=production \"rimraf dist && webpack\""
+    "build": "cross-env-shell BABEL_ENV=production NODE_ENV=production \"rimraf dist && webpack\""
   },
   "repository": {
     "type": "git",
@@ -48,17 +48,14 @@
     "babel-cli": "^6.24.1",
     "babel-loader": "^7.0.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-preset-babili": "^0.0.12",
-    "babel-preset-env": "^1.4.0",
-    "babili-webpack-plugin": "^0.0.11",
-    "chai": "^3.5.0",
-    "co-mocha": "^1.1.2",
-    "cross-env": "^4.0.0",
-    "mocha": "^2.4.5",
+    "babel-preset-babili": "^0.1.2",
+    "babel-preset-env": "^1.5.1",
+    "babili-webpack-plugin": "^0.1.1",
+    "cross-env": "^5.0.0",
     "rimraf": "^2.6.1",
-    "webpack": "^2.4.1",
-    "webpack-node-externals": "^1.5.4",
-    "yargs": "^7.1.0"
+    "webpack": "^2.6.1",
+    "webpack-node-externals": "^1.6.0",
+    "yargs": "^8.0.1"
   },
   "peerDependencies": {
     "react": "^15.5.4",
