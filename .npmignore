@@ -1,8 +1,8 @@
+.DS_STORE
 .idea
 src
 test
 examples
 node_modules
-webpack.config.js
 yarn.lock
 .git
