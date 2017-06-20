@@ -28,7 +28,7 @@ export default (config = {}) => {
 
     output: {
       path: path.resolve(root_dir, './dist'),
-      filename: `${params.name}.js`,
+      filename: `[name].js`,
       library: params.name,
       libraryTarget: params.webpack.libraryTarget,
       umdNamedDefine: true,
