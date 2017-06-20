@@ -14,7 +14,6 @@ import hoistStatics from 'hoist-non-react-statics';
  *
  */
 export default function sagaProcessConnector(selected, connector) {
-  console.log('Selected: ', selected);
   if (typeof connector === 'function') {
     /*
       The simple method of connecting a component.  This is simple because it
