@@ -16,16 +16,6 @@
     "type": "git",
     "url": "git+https://github.com/Dash-OS/redux-saga-process.git"
   },
-  "files": [
-    "src",
-    "dist",
-    "webpack.config.js",
-    "README.md",
-    "LICENSE"
-  ],
-  "directories": {
-    "lib": "src/process-lib"
-  },
   "bugs": {
     "url": "https://github.com/Dash-OS/redux-saga-process/issues"
   },
