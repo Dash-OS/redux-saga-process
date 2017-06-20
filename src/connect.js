@@ -1,3 +1,3 @@
-import connectProcesses from './process-lib/connext';
+import connectProcesses from './process-lib/connect';
 
 export default connectProcesses;

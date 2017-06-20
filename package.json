@@ -1,6 +1,6 @@
 {
   "name": "redux-saga-process",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "description": "Encapsulate your Logic into Processes",
   "main": "dist/redux-saga-process.js",
   "scripts": {
