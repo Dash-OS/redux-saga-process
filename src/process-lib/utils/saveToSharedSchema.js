@@ -30,7 +30,7 @@ export default function saveToSharedSchema(
         sharedGlobalValues.get(processID),
         publicValues,
       );
-    } else if (type == 'array') {
+    } else if (type === 'array') {
       processLocalValues = [].concat([
         ...sharedGlobalValues.get(processID),
         ...publicValues,

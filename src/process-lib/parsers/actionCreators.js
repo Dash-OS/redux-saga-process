@@ -17,7 +17,7 @@ export default function parseSagaProcessActionCreators(
   Compiled,
 ) {
   const { schema } = proc;
-  const { processID, actionCreators = {} } = schema;
+  const { actionCreators = {} } = schema;
   if (!schema.compiled) {
     schema.compiled = {};
   }
@@ -49,7 +49,7 @@ function createActionCreator(type, keys = [], merge = {}) {
 }
 
 function buildActionCreator(actionCreatorKey, actionCreator, proc) {
-  const { processID, schema } = proc;
+  const { schema } = proc;
 
   const scope = actionCreatorKey.startsWith('!') ? 'private' : 'public';
 

@@ -20,7 +20,7 @@ import invokeIf from 'invoke-if';
   those values in.
 */
 export default function parseSagaProcessReducer(proc, SharedSchema, Compiled) {
-  const { processor, schema } = proc;
+  const { schema } = proc;
   if (!schema.config.reduces) {
     return;
   }

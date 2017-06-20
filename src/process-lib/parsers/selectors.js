@@ -13,7 +13,7 @@ export default function parseSagaProcessSelectors(
   Compiled,
 ) {
   const { schema } = proc;
-  const { processID, selectors = {} } = schema;
+  const { selectors = {} } = schema;
   if (!schema.compiled) {
     schema.compiled = {};
   }

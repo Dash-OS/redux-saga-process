@@ -6,7 +6,6 @@ import {
   setContextDefaults,
   getDefaultProcessSchema,
   isProcess,
-  processIsRunning,
   ProcessProperties,
 } from './context';
 
@@ -31,7 +30,8 @@ export function buildProcesses(processes, global_config, configure_handler) {
   // set the default config and values, if previous tasks were
   // known, we will receive a killPromise that resolves when all
   // our previous tasks have been killed.
-  const killPromise = setContextDefaults(global_config);
+  // const killPromise = setContextDefaults(global_config);
+  setContextDefaults(global_config);
 
   if (!_.isPlainObject(processes)) {
     throw new Error('[saga-process] buildProcesses expects a plain object');
@@ -43,6 +43,7 @@ export function buildProcesses(processes, global_config, configure_handler) {
   // compile our processes now that we have gathered them into our Map.
   compileSharedSchema();
 
+  console.log('Reducer');
   return {
     processIDs: new Set([...Processes.keys()]),
     processReducers: Compiled.get('reducers'),
@@ -246,15 +247,16 @@ function compileSharedSchema() {
   }
 }
 
-/**
- * compileProcess
- * @param  {Process} processClass [description]
- * @return {[type]}               [description]
- */
-function compileProcess(processClass) {
-  for (const option of Object.keys(processClass.schema)) {
-    if (typeof parseOption[option] === 'function') {
-      parseOption[option](processClass, Compiled);
-    }
-  }
-}
+// /**
+//  * compileProcess
+//  * @param  {Process} processClass [description]
+//  * @return {[type]}               [description]
+//  */
+//
+// function compileProcess(processClass) {
+//   for (const option of Object.keys(processClass.schema)) {
+//     if (typeof parseOption[option] === 'function') {
+//       parseOption[option](processClass, Compiled);
+//     }
+//   }
+// }

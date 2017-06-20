@@ -7,8 +7,11 @@ import { call } from 'redux-saga/effects';
  * @return {Generator}        [description]
  */
 export default function* handleProcessCancellation(action, proc) {
-  if (typeof instance.shouldProcessCancel === 'function') {
-    return yield call([instance, instance.shouldProcessCancel], action);
+  if (typeof proc.schema.instance.shouldProcessCancel === 'function') {
+    return yield call(
+      [proc.schema.instance, proc.schema.instance.shouldProcessCancel],
+      action,
+    );
   } else {
     return true;
   }

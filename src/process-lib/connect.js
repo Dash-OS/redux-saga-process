@@ -14,6 +14,7 @@ import hoistStatics from 'hoist-non-react-statics';
  *
  */
 export default function sagaProcessConnector(selected, connector) {
+  console.log('Selected: ', selected);
   if (typeof connector === 'function') {
     /*
       The simple method of connecting a component.  This is simple because it
@@ -65,7 +66,7 @@ export default function sagaProcessConnector(selected, connector) {
  * @constructor
  */
 function SagaProcessWrapper(WrappedComponent, _selected) {
-  const selected = getSelectedProcesses(_selected);
+  // const selected = getSelectedProcesses(_selected);
 
   class SagaProcessConnect extends Component {
     addExtraProps = props => {
@@ -90,10 +91,12 @@ function SagaProcessWrapper(WrappedComponent, _selected) {
 export const getSelectedProcesses = function sagaProcessGetSelectedProcess(
   selected,
 ) {
-  return Object.keys(selected).reduce(
+  const r = Object.keys(selected).reduce(
     (...args) => handleProcessReduction(selected, ...args),
     {},
   );
+  console.log(Processes);
+  return r;
 };
 
 /**
@@ -104,20 +107,23 @@ export const getSelectedProcesses = function sagaProcessGetSelectedProcess(
  * @return {[type]}          [description]
  */
 function handleProcessReduction(selected, p, c) {
+  console.log('Reduction: ', selected);
+  console.log(Processes.get(c));
   if (!Processes.has(c)) {
     return p;
   }
   const Schema = ProcessSchema.get(Processes.get(c));
+  console.log(Schema);
   if (!Schema.compiled || !Schema.compiled.public) {
     return p;
   }
-  for (let selected of selected[c]) {
-    let value = Schema.compiled.public[selected];
-    if (!value && selected === 'actions') {
+  for (const pid of selected[c]) {
+    let value = Schema.compiled.public[pid];
+    if (!value && pid === 'actions') {
       value = Schema.compiled.public.actionCreators;
     }
     if (value) {
-      p[selected] = Object.assign({}, p[selected], value);
+      p[pid] = { ...p[pid], ...value };
     }
   }
   return p;

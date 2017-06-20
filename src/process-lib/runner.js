@@ -6,7 +6,7 @@ import {
   SharedSchema,
 } from './context';
 
-import { fork, call, race, cancelled, take } from 'redux-saga/effects';
+import { call } from 'redux-saga/effects';
 import { delay } from 'redux-saga';
 
 import subscribeToTypesSaga from './sagas/subscribeToTypes';

@@ -4,6 +4,7 @@ import { getTypePattern } from '../utils/typeUtils';
 import monitorTypesSaga from './monitorTypes';
 import handleMonitoredActionSaga from './handleMonitoredAction';
 import handleProcessCancellationSaga from './handleProcessCancellation';
+import awaitStartupActionSaga from './awaitProcessStartup';
 
 import { DO_NOT_MONITOR } from '../context';
 
@@ -15,7 +16,7 @@ import { DO_NOT_MONITOR } from '../context';
  * @return {Generator}                [description]
  */
 export default function* subscribeToTypes(proc, monitorConfig, compiledConfig) {
-  const { processID, processor, schema } = proc;
+  const { schema } = proc;
 
   schema.monitor = {};
 
@@ -27,7 +28,7 @@ export default function* subscribeToTypes(proc, monitorConfig, compiledConfig) {
     schema.startOnAction &&
     typeof schema.instance.processStarts === 'function'
   ) {
-    yield call([schema.instance, awaitStartupAction], proc, monitorConfig);
+    yield call([schema.instance, awaitStartupActionSaga], proc, monitorConfig);
   }
 
   if (schema.actionRoutes) {

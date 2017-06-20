@@ -10,10 +10,8 @@ import patternMatchesAction from './patternMatchesAction';
  * @return {[type]}               [description]
  */
 export default function parseActionForRoutes(action, obj, proc, executeRoutes) {
-  let types,
-    routes,
-    pattern = [],
-    i = 0;
+  let routes;
+  let i = 0;
   if (obj instanceof Map) {
     routes = [...obj.values()];
   } else if (_.isPlainObject(obj)) {

@@ -12,7 +12,7 @@ import ToReduxType from 'to-redux-type';
  * @return {[type]}         [description]
  */
 export default function patternMatchesAction(action, pattern, proc) {
-  const { monitor } = proc.schema;
+  // const { monitor } = proc.schema;
 
   let response;
 

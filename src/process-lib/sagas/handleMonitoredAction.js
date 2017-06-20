@@ -11,13 +11,7 @@ import runActionRouteSaga from './runActionRoute';
  * @return {Generator}        [description]
  */
 export default function* handleMonitoredActionSaga(action, proc) {
-  const {
-    processID,
-    monitor,
-    actionRoutes,
-    instance,
-    processPath,
-  } = proc.schema;
+  const { processID, actionRoutes, instance, processPath } = proc.schema;
 
   const executeRoutes = [];
 

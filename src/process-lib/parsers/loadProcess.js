@@ -8,6 +8,5 @@ export default function parseSagaProcessLoadProcess(
   Compiled,
 ) {
   const { schema } = proc;
-  const { processID, selectors = {} } = schema;
   schema.isAsync = true;
 }

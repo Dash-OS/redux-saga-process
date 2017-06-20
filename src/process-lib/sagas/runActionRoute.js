@@ -11,7 +11,7 @@ export default function* runActionRoute(proc, route, action, original_route) {
   try {
     yield call([proc.schema.instance, route], action);
   } catch (e) {
-    const { processID, instance, processPath } = proc.schema;
+    const { processID, processPath } = proc.schema;
     console.error(
       `[process-manager]: action route | ${processID} -> ${processPath}.${original_route} | uncaught error: ${e.message}`,
     );

@@ -37,12 +37,11 @@ function compileSagaProcessReducerValue(
   const compiledConfig = Compiled.get('config');
 
   let compiledReducer = [],
-    wildcardTypes,
-    reducerTypes,
     isWildcardReducer = false,
     reducerConfig = Object.assign({}, config);
 
-  for (let [processID, _reducer] of reducers) {
+  for (let value of reducers) {
+    const _reducer = value[1];
     let reducer;
     if (_reducer.config) {
       reducerConfig = Object.assign(reducerConfig, _reducer.config);
@@ -61,7 +60,12 @@ function compileSagaProcessReducerValue(
     } else if (Array.isArray(reducer)) {
       // if an array, compile each in the array
       compiledReducer.push(
-        ...compileReducer(reducerKey, reducer, Compiled, reducerConfig),
+        ...compileSagaProcessReducerValue(
+          reducerKey,
+          reducer,
+          Compiled,
+          reducerConfig,
+        ),
       );
     } else if (_.isPlainObject(reducer)) {
       /*
