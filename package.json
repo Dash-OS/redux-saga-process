@@ -1,13 +1,13 @@
 {
   "name": "redux-saga-process",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "description": "Encapsulate your Logic into Processes",
-  "main": "dist/redux-saga-process.js",
+  "main": "dist/main.js",
   "scripts": {
     "test-disabled": "cross-env NODE_ENV=test nyc mocha --recursive --require ./test/setup.js ./test/tests/*.js",
     "compile": "projectz compile",
     "posttest": "npm run compile",
-    "prepublish-disabled": "npm run test && npm run build:prod",
+    "prepublish": "npm run build:prod",
     "build:prod": "cross-env NODE_ENV=production BABEL_ENV=production babel-node config/scripts/build",
     "build": "babel-node config/scripts/build",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
