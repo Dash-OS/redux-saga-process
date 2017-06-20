@@ -21,15 +21,12 @@ export default (config = {}) => {
 
     devtool: process.env.NODE_ENV !== 'production' && 'source-map',
 
-    entry: [
-      path.resolve(root_dir, './src/connect.js'),
-      path.resolve(root_dir, './src/index.js'),
-    ],
+    entry: path.resolve(root_dir, './src/index.js'),
 
     output: {
-      path: path.resolve(root_dir, './dist'),
-      filename: `[name].js`,
-      library: params.name,
+      path: path.resolve(root_dir, params.build.directory),
+      filename: `${params.name}.js`,
+      library: [params.name, '[name]'],
       libraryTarget: params.webpack.libraryTarget,
       umdNamedDefine: true,
     },

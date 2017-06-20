@@ -95,7 +95,6 @@ export const getSelectedProcesses = function sagaProcessGetSelectedProcess(
     (...args) => handleProcessReduction(selected, ...args),
     {},
   );
-  console.log(Processes);
   return r;
 };
 
@@ -107,9 +106,9 @@ export const getSelectedProcesses = function sagaProcessGetSelectedProcess(
  * @return {[type]}          [description]
  */
 function handleProcessReduction(selected, p, c) {
-  console.log('Reduction: ', selected);
-  console.log(Processes.get(c));
+  console.log(Processes, Schema, Processes.get(c));
   if (!Processes.has(c)) {
+    console.log('not found: ', c);
     return p;
   }
   const Schema = ProcessSchema.get(Processes.get(c));

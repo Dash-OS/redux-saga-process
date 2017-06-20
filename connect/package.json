@@ -1,0 +1,7 @@
+{
+  "name": "redux-saga-process/connect",
+  "private": true,
+  "main": "../dist/redux-saga-process.connect.js",
+  "module": "../src/process-lib/connect.js",
+  "jsnext:main": "../src/process-lib/connect.js"
+}

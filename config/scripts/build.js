@@ -1,38 +1,40 @@
-import webpack from 'webpack'
-import path from 'path'
-import { exec, log } from '../utils'
-import webpackConfigurationFactory from '../webpack'
-import rootDir from 'app-root-dir'
+import webpack from 'webpack';
+import path from 'path';
+import { exec, log } from '../utils';
+import webpackConfigurationFactory from '../webpack';
+import rootDir from 'app-root-dir';
+import params from '../../app';
 
 /*
   Our Factory takes a config object and returns a webpack configuration
 */
 
-const webpackConfig = webpackConfigurationFactory({})
+const webpackConfig = webpackConfigurationFactory({});
 
-const root_dir = rootDir.get()
+const root_dir = rootDir.get();
 
-const compiler = webpack(webpackConfig)
+const compiler = webpack(webpackConfig);
 
 log({
   title: 'Starting Build',
-  message: 'Starting Webpack Compiltation'
-})
+  message: 'Starting Webpack Compiltation',
+});
 
-exec(`rimraf ${path.resolve(root_dir, 'dist')}`)
+exec(`rimraf "${path.resolve(root_dir, params.build.directory)}"`);
 
+// dfsdfd;
 compiler.run((err, stats) => {
-  if ( err ) {
+  if (err) {
     return log({
       title: 'Build Failed',
       message: err.message,
       level: 'error',
-    })
+    });
   } else {
     log({
       title: 'Build Complete!',
-      message: 'Webpack Build Completed!'
-    })
-    console.log(stats.toString({ colors: true }))
+      message: 'Webpack Build Completed!',
+    });
+    console.log(stats.toString({ colors: true }));
   }
-})
+});

@@ -5,6 +5,10 @@ export default {
     libraryTarget: 'umd',
   },
 
+  build: {
+    directory: 'dist',
+  },
+
   babel: {
     plugins: ['transform-class-properties'],
     presets: [
@@ -17,9 +21,9 @@ export default {
       ],
     ],
     env: {
-      production: {
-        presets: [['babili', {}]],
-      },
+      // production: {
+      //   presets: ['babili'],
+      // },
       test: {
         plugins: ['istanbul'],
         sourceMaps: 'inline',
