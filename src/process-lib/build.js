@@ -43,7 +43,6 @@ export function buildProcesses(processes, global_config, configure_handler) {
   // compile our processes now that we have gathered them into our Map.
   compileSharedSchema();
 
-  console.log('Reducer');
   return {
     processIDs: new Set([...Processes.keys()]),
     processReducers: Compiled.get('reducers'),
