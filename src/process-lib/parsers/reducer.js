@@ -30,7 +30,9 @@ export default function parseSagaProcessReducer(proc, SharedSchema, Compiled) {
     create reducers for the process.
   */
 
-  let reduces, reducer, initialState;
+  let reduces;
+  let reducer;
+  let initialState;
 
   if (Array.isArray(schema.config.reduces)) {
     // An array of keys that we will reduce.  In this situation the
@@ -49,26 +51,12 @@ export default function parseSagaProcessReducer(proc, SharedSchema, Compiled) {
     initialState = { [schema.config.reduces]: schema.initialState };
   }
 
-  for (let reducerKey of reduces) {
-    buildReducer(
-      reducerKey,
-      reducer,
-      initialState,
-      proc,
-      SharedSchema,
-      Compiled,
-    );
+  for (const reducerKey of reduces) {
+    buildReducer(reducerKey, reducer, initialState, proc, SharedSchema, Compiled);
   }
 }
 
-function buildReducer(
-  reducerKey,
-  reducer,
-  initialState,
-  proc,
-  SharedSchema,
-  Compiled,
-) {
+function buildReducer(reducerKey, reducer, initialState, proc, SharedSchema, Compiled) {
   const newReducer = reducer[reducerKey];
 
   if (!newReducer) {
@@ -85,9 +73,7 @@ function buildReducer(
   let keyInitialState = {};
 
   const reducerConfig = {
-    wildcard: compiledConfig.wildcard === false
-      ? false
-      : proc.schema.config.wildcard === true,
+    wildcard: compiledConfig.wildcard === false ? false : proc.schema.config.wildcard === true,
   };
 
   invokeIf(

@@ -7,17 +7,13 @@ import saveToSharedSchema from '../utils/saveToSharedSchema';
  * @param  {[type]} Compiled     [description]
  * @return {[type]}              [description]
  */
-export default function parseSagaProcessSelectors(
-  proc,
-  SharedSchema,
-  Compiled,
-) {
+export default function parseSagaProcessSelectors(proc, SharedSchema) {
   const { schema } = proc;
   const { selectors = {} } = schema;
   if (!schema.compiled) {
     schema.compiled = {};
   }
-  for (let selectorKey of Object.keys(selectors)) {
+  for (const selectorKey of Object.keys(selectors)) {
     buildSelector(selectorKey, selectors[selectorKey], schema);
   }
   saveToSharedSchema('compiled.public', 'selectors', proc, SharedSchema);

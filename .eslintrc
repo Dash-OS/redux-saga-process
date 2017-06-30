@@ -1,28 +1,43 @@
 {
   "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module",
+    "allowImportExportEverywhere": true
+  },
   "extends": "airbnb",
-  "plugins": [
-    "flowtype"
-  ],
   "env": {
     "browser": true,
-    "es6": true,
-    "node": true,
-    "jest": true
-  },
-  "ecmaFeatures": {
-    "defaultParams": true
+    "node": true
   },
   "rules": {
-    // We use the 'import' plugin which allows for cases "flow" awareness.
-    "no-duplicate-imports": 0,
-    // A .jsx extension is not required for files containing jsx.
-    "react/jsx-filename-extension": 0,
-    // This rule struggles with flow and class properties.
-    "react/sort-comp": 0,
-    // This rule struggles with flow.
-    "react/prop-types": 0,
-    // We use global requires in various places, e.g. code splitting instances.
-    "global-require": 0
-  }
+    "arrow-parens": ["off"],
+    "compat/compat": "error",
+    "consistent-return": "off",
+    "import/no-unresolved": "off",
+    "import/no-extraneous-dependencies": "off",
+    "no-console": "off",
+    "no-multi-assign": "off",
+    "promise/param-names": "error",
+    "promise/always-return": "error",
+    "promise/catch-or-return": "error",
+    "promise/no-native": "off",
+    "react/sort-comp": ["error", {
+      "order": ["type-annotations", "static-methods", "lifecycle", "everything-else", "render"]
+    }],
+    "react/jsx-no-bind": "off",
+    "react/jsx-filename-extension": ["error", { "extensions": [".js", ".jsx"] }],
+    "react/prefer-stateless-function": "off",
+    "no-param-reassign": "off",
+    "no-restricted-syntax": "off",
+    "no-constant-condition": "off",
+    "no-confusing-arrow": "off",
+    "no-use-before-define": "off",
+    "no-underscore-dangle": "off"
+  },
+  "plugins": [
+    "import",
+    "promise",
+    "compat",
+    "react"
+  ]
 }

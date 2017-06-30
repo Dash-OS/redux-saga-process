@@ -20,11 +20,10 @@ export default function parseActionForRoutes(action, obj, proc, executeRoutes) {
     return;
   }
   const { monitor } = proc.schema;
-  for (let pattern of monitor.pattern) {
+  for (const pattern of monitor.pattern) {
     if (patternMatchesAction(action, pattern, proc)) {
       executeRoutes.push(routes[i]);
     }
-    i++;
+    i += 1;
   }
-  return;
 }

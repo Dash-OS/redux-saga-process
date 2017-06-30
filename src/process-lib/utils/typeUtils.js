@@ -12,8 +12,8 @@ import { DO_NOT_MONITOR } from '../context';
  * @return {TypePattern}   [description]
  */
 export function getTypePattern(obj, config = {}) {
-  let types,
-    pattern = [];
+  let types;
+  const pattern = [];
   if (obj instanceof Map) {
     types = [...obj.keys()];
   } else if (_.isPlainObject(obj)) {
@@ -30,7 +30,7 @@ export function getTypePattern(obj, config = {}) {
     return DO_NOT_MONITOR;
   }
 
-  for (let type of types) {
+  for (const type of types) {
     parseTypeForPattern(type, pattern, config);
   }
 
@@ -47,31 +47,25 @@ export function getTypePattern(obj, config = {}) {
 export function parseTypeForPattern(type, pattern, config) {
   if (typeof type === 'function') {
     pattern.push(type);
-  } else {
-    if (typeof type === 'string') {
-      type = ToReduxType(type);
-      if (hasWildcard(type) && config.wildcard === true) {
-        config.hasWildcard = true;
-        const WC = new Wildcard(type);
-        pattern.push(action => WC.match(action.type));
-      } else {
-        pattern.push(type);
-      }
+  } else if (typeof type === 'string') {
+    type = ToReduxType(type);
+    if (hasWildcard(type) && config.wildcard === true) {
+      config.hasWildcard = true;
+      const WC = new Wildcard(type);
+      pattern.push(action => WC.match(action.type));
     } else {
-      if (Array.isArray(type)) {
-        type = ToReduxType(type);
-        if (config.wildcard === true && hasWildcard(type)) {
-          config.hasWildcard = true;
-          const WC = new Wildcard(type);
-          pattern.push(action => WC.match(action.type));
-        } else {
-          pattern.push(type);
-        }
-      } else if (_.isPlainObject(type)) {
-        pattern.push(action =>
-          Object.keys(type).every(x => type[x] === action[x]),
-        );
-      }
+      pattern.push(type);
     }
+  } else if (Array.isArray(type)) {
+    type = ToReduxType(type);
+    if (config.wildcard === true && hasWildcard(type)) {
+      config.hasWildcard = true;
+      const WC = new Wildcard(type);
+      pattern.push(action => WC.match(action.type));
+    } else {
+      pattern.push(type);
+    }
+  } else if (_.isPlainObject(type)) {
+    pattern.push(action => Object.keys(type).every(x => type[x] === action[x]));
   }
 }

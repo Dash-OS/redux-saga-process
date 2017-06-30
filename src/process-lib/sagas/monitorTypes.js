@@ -7,12 +7,7 @@ import { fork, race, call, take, cancelled } from 'redux-saga/effects';
  * @param {[type]} proc [description]
  * @param {[type]} handler [description]
  */
-export default function* monitorTypesSaga(
-  monitorPattern,
-  cancelPattern,
-  proc,
-  handler,
-) {
+export default function* monitorTypesSaga(monitorPattern, cancelPattern, proc, handler) {
   const { instance } = proc.schema;
   let isRunning = true;
 

@@ -1,8 +1,9 @@
 import webpack from 'webpack';
 import path from 'path';
+import handleRootDir from 'app-root-dir';
 import { exec, log } from '../utils';
 import webpackConfigurationFactory from '../webpack';
-import rootDir from 'app-root-dir';
+
 import params from '../../app';
 
 /*
@@ -11,7 +12,7 @@ import params from '../../app';
 
 const webpackConfig = webpackConfigurationFactory({});
 
-const root_dir = rootDir.get();
+const rootDir = handleRootDir.get();
 
 const compiler = webpack(webpackConfig);
 
@@ -20,7 +21,7 @@ log({
   message: 'Starting Webpack Compiltation',
 });
 
-exec(`rimraf "${path.resolve(root_dir, params.build.directory)}"`);
+exec(`rimraf "${path.resolve(rootDir, params.build.directory)}"`);
 
 // dfsdfd;
 compiler.run((err, stats) => {
@@ -30,11 +31,10 @@ compiler.run((err, stats) => {
       message: err.message,
       level: 'error',
     });
-  } else {
-    log({
-      title: 'Build Complete!',
-      message: 'Webpack Build Completed!',
-    });
-    console.log(stats.toString({ colors: true }));
   }
+  log({
+    title: 'Build Complete!',
+    message: 'Webpack Build Completed!',
+  });
+  console.log(stats.toString({ colors: true }));
 });

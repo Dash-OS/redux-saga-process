@@ -4,16 +4,16 @@ import { call } from 'redux-saga/effects';
  * @param  {[type]}    proc           [description]
  * @param  {[type]}    route          [description]
  * @param  {[type]}    action         [description]
- * @param  {[type]}    original_route [description]
+ * @param  {[type]}    originalRoute [description]
  * @return {Generator}                [description]
  */
-export default function* runActionRoute(proc, route, action, original_route) {
+export default function* runActionRoute(proc, route, action, originalRoute) {
   try {
     yield call([proc.schema.instance, route], action);
   } catch (e) {
     const { processID, processPath } = proc.schema;
     console.error(
-      `[process-manager]: action route | ${processID} -> ${processPath}.${original_route} | uncaught error: ${e.message}`,
+      `[process-manager]: action route | ${processID} -> ${processPath}.${originalRoute} | uncaught error: ${e.message}`,
     );
   }
 }

@@ -1,5 +1,5 @@
-import { RootTasks } from '../context';
 import { call, take, cancelled } from 'redux-saga/effects';
+import { RootTasks } from '../context';
 import { getTypePattern } from '../utils/typeUtils';
 
 /**
@@ -11,10 +11,7 @@ import { getTypePattern } from '../utils/typeUtils';
 export default function* awaitProcessStartupSaga(proc, monitorConfig) {
   const { processID, schema } = proc;
   try {
-    if (
-      schema.instance &&
-      typeof schema.instance.processStarts === 'function'
-    ) {
+    if (schema.instance && typeof schema.instance.processStarts === 'function') {
       const startupPattern = getTypePattern(schema.startOnAction, {
         ...monitorConfig,
         parseObject: 'matches',

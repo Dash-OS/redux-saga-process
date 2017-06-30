@@ -4,13 +4,13 @@ import { createTaskManager, killAllTaskManagers } from 'saga-task-manager';
   Built processes are stored within the Map so that they may later be referenced
   and ran when required.
 */
-const Processes = new Map(),
-  // WeakMap storing all running processes current configuration / schema
-  // which can be parsed to build our resulting reducers, actions, and selectors.
-  ProcessSchema = new WeakMap(),
-  Compiled = new Map();
+const Processes = new Map();
+// WeakMap storing all running processes current configuration / schema
+// which can be parsed to build our resulting reducers, actions, and selectors.
+const ProcessSchema = new WeakMap();
+const Compiled = new Map();
 
-let SharedSchema;
+let SharedSchema; // eslint-disable-line
 
 const DO_NOT_MONITOR = Symbol.for('@@saga-process-manager/$DO_NOT_MONITOR');
 const IS_PROCESS = Symbol.for('@@saga-process-manager/$isProcess');
@@ -40,14 +40,13 @@ const ProcessProperties = [
   is important because of the changes made to redux-saga that make fork a blocking
   effect at the end of the day.
 */
-let RootTasks;
+let RootTasks; // eslint-disable-line
 
 /**
  * defaultSharedSchema
  * @return {[type]} [description]
  */
-const getDefaultSharedSchema = () =>
-  new Map([['initialState', new Map()], ['reducer', new Map()]]);
+const getDefaultSharedSchema = () => new Map([['initialState', new Map()], ['reducer', new Map()]]);
 
 /**
  * getDefaultProcessSchema

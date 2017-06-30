@@ -1,6 +1,6 @@
+import hoistStatics from 'hoist-non-react-statics';
 import { Component, createElement } from 'react';
 import { Processes, ProcessSchema } from './context';
-import hoistStatics from 'hoist-non-react-statics';
 
 /**
  * sagaProcessConnector
@@ -41,21 +41,20 @@ export default function sagaProcessConnector(selected, connector) {
       )
     */
     return getSelectedProcesses(selected);
-  } else {
-    /*
-      The more standard method of connecting / HOC with other libraries,
-      This will return a function that can be passed a valid React Component.
-      This version will actually render a component in a similar fashion to the
-      way redux-connect operates.
-
-      const Component = connectProcesses(
-        {
-          myProcess: [ 'action', 'selectors' ]
-        }
-      )(Component)
-    */
-    return WrappedComponent => SagaProcessWrapper(WrappedComponent, selected);
   }
+  /*
+    The more standard method of connecting / HOC with other libraries,
+    This will return a function that can be passed a valid React Component.
+    This version will actually render a component in a similar fashion to the
+    way redux-connect operates.
+
+    const Component = connectProcesses(
+      {
+        myProcess: [ 'action', 'selectors' ]
+      }
+    )(Component)
+  */
+  return WrappedComponent => SagaProcessWrapper(WrappedComponent, selected);
 }
 
 /**
@@ -64,14 +63,13 @@ export default function sagaProcessConnector(selected, connector) {
  * @param       {[type]} _selected        [description]
  * @constructor
  */
-function SagaProcessWrapper(WrappedComponent, _selected) {
+function SagaProcessWrapper(WrappedComponent) {
   // const selected = getSelectedProcesses(_selected);
 
   class SagaProcessConnect extends Component {
-    addExtraProps = props => {
+    addExtraProps = props =>
       // Don't know what we want to do with this style yet
-      return props;
-    };
+      props;
 
     render() {
       return createElement(WrappedComponent, this.addExtraProps(this.props));
@@ -87,9 +85,7 @@ function SagaProcessWrapper(WrappedComponent, _selected) {
  *  sagaProcessGetSelectedProcess
  *  @param {[type]} selected [description]
  */
-export const getSelectedProcesses = function sagaProcessGetSelectedProcess(
-  selected,
-) {
+export const getSelectedProcesses = function sagaProcessGetSelectedProcess(selected) {
   const r = Object.keys(selected).reduce(
     (...args) => handleProcessReduction(selected, ...args),
     {},

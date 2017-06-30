@@ -16,7 +16,7 @@ export default function compileSagaProcessReducers(
   Compiled,
 ) {
   const compiledReducers = Compiled.get('reducers') || {};
-  for (let [reducerKey, reducers] of value) {
+  for (const [reducerKey, reducers] of value) {
     // each reducer will be a Set of reducer primitives which we
     // will merge into a single reducer.
     const initialState = SharedSchema.get('initialState').get(reducerKey);
@@ -28,19 +28,14 @@ export default function compileSagaProcessReducers(
   Compiled.set('reducers', compiledReducers);
 }
 
-function compileSagaProcessReducerValue(
-  reducerKey,
-  reducers,
-  Compiled,
-  config = {},
-) {
+function compileSagaProcessReducerValue(reducerKey, reducers, Compiled, config = {}) {
   const compiledConfig = Compiled.get('config');
 
-  let compiledReducer = [],
-    isWildcardReducer = false,
-    reducerConfig = Object.assign({}, config);
+  const compiledReducer = [];
+  let isWildcardReducer = false;
+  let reducerConfig = Object.assign({}, config);
 
-  for (let value of reducers) {
+  for (const value of reducers) {
     const _reducer = value[1];
     let reducer;
     if (_reducer.config) {
@@ -60,12 +55,7 @@ function compileSagaProcessReducerValue(
     } else if (Array.isArray(reducer)) {
       // if an array, compile each in the array
       compiledReducer.push(
-        ...compileSagaProcessReducerValue(
-          reducerKey,
-          reducer,
-          Compiled,
-          reducerConfig,
-        ),
+        ...compileSagaProcessReducerValue(reducerKey, reducer, Compiled, reducerConfig),
       );
     } else if (_.isPlainObject(reducer)) {
       /*
@@ -80,7 +70,7 @@ function compileSagaProcessReducerValue(
 
       // console.log(reducer)
       if (compiledConfig.wildcard === true && reducerConfig.wildcard === true) {
-        for (let type of Object.keys(reducer)) {
+        for (const type of Object.keys(reducer)) {
           if (type.includes('*')) {
             isWildcardReducer = true;
             break;

@@ -3,13 +3,7 @@ import _ from 'lodash';
 /*
   Saves a given value to the shared schema.  This
 */
-export default function saveToSharedSchema(
-  path,
-  key,
-  proc,
-  SharedSchema,
-  type = 'object',
-) {
+export default function saveToSharedSchema(path, key, proc, SharedSchema, type = 'object') {
   const { schema } = proc;
   const { processID } = schema;
   const publicValues = _.get(schema, `${path}.${key}`);
@@ -25,16 +19,9 @@ export default function saveToSharedSchema(
     */
 
     if (type === 'object') {
-      processLocalValues = Object.assign(
-        {},
-        sharedGlobalValues.get(processID),
-        publicValues,
-      );
+      processLocalValues = Object.assign({}, sharedGlobalValues.get(processID), publicValues);
     } else if (type === 'array') {
-      processLocalValues = [].concat([
-        ...sharedGlobalValues.get(processID),
-        ...publicValues,
-      ]);
+      processLocalValues = [].concat([...sharedGlobalValues.get(processID), ...publicValues]);
     }
 
     sharedGlobalValues.set(processID, processLocalValues);

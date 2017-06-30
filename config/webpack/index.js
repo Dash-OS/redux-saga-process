@@ -1,6 +1,5 @@
 import path from 'path';
-import webpack from 'webpack';
-import rootDir from 'app-root-dir';
+import handleRootDir from 'app-root-dir';
 import nodeExternals from 'webpack-node-externals';
 import { log } from '../utils';
 
@@ -8,9 +7,9 @@ import webpackPlugins from './plugins';
 
 import params from '../../app';
 
-const root_dir = rootDir.get();
+const rootDir = handleRootDir.get();
 
-export default (config = {}) => {
+export default () => {
   log({
     title: 'Building Webpack Configuration',
     message: JSON.stringify(params, null, 2),
@@ -21,10 +20,10 @@ export default (config = {}) => {
 
     devtool: process.env.NODE_ENV !== 'production' && 'source-map',
 
-    entry: path.resolve(root_dir, './src/index.js'),
+    entry: path.resolve(rootDir, './src/index.js'),
 
     output: {
-      path: path.resolve(root_dir, params.build.directory),
+      path: path.resolve(rootDir, params.build.directory),
       filename: `${params.name}.js`,
       library: [params.name, '[name]'],
       libraryTarget: params.webpack.libraryTarget,
@@ -42,7 +41,7 @@ export default (config = {}) => {
         {
           test: /\.jsx?$/,
           exclude: /node_modules/,
-          include: [path.resolve(root_dir, './src')],
+          include: [path.resolve(rootDir, './src')],
           use: [
             {
               loader: 'babel-loader',

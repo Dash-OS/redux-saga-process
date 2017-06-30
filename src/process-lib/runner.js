@@ -1,13 +1,7 @@
-import {
-  Processes,
-  ProcessSchema,
-  Compiled,
-  RootTasks,
-  SharedSchema,
-} from './context';
-
 import { call } from 'redux-saga/effects';
 import { delay } from 'redux-saga';
+
+import { Processes, ProcessSchema, Compiled, RootTasks, SharedSchema } from './context';
 
 import subscribeToTypesSaga from './sagas/subscribeToTypes';
 import asynchronouslyLoadProcessSaga from './sagas/asynchronouslyLoadProcess';
@@ -18,21 +12,16 @@ import { getTypePattern } from './utils/typeUtils';
  * runProcesses
  * @return {Generator} [description]
  */
+// eslint-disable-next-line
 export function* runProcesses() {
   try {
-    for (let [processID, processor] of Processes) {
+    for (const [processID, processor] of Processes) {
       const proc = {
         processID,
         processor,
         schema: ProcessSchema.get(processor),
       };
-      yield call(
-        [RootTasks, RootTasks.create],
-        'processes',
-        processID,
-        runProcess,
-        proc,
-      );
+      yield call([RootTasks, RootTasks.create], 'processes', processID, runProcess, proc);
     }
   } catch (e) {
     console.error(e.message);
@@ -45,15 +34,15 @@ export function* runProcesses() {
  * @return {Generator}      [description]
  */
 function* runProcess(proc) {
-  const { processID, processor, schema } = proc;
+  const { processID, processor: Processor, schema } = proc;
 
-  let prev_state;
+  let prevState;
 
   let instances = SharedSchema.get('instances');
 
   if (instances && instances.has(processID)) {
     const instance = instances.get(processID);
-    prev_state = instance.state;
+    prevState = instance.state;
   }
 
   // TODO: This delay is required because killing the previous processes is an
@@ -71,7 +60,7 @@ function* runProcess(proc) {
 
   if (!schema.instance) {
     // Construct the Process if we haven't already
-    schema.instance = new processor(processID, prev_state, proc);
+    schema.instance = new Processor(processID, prevState, proc);
   }
 
   instances.set(processID, schema.instance);
@@ -81,8 +70,7 @@ function* runProcess(proc) {
   const compiledConfig = Compiled.get('config');
 
   const monitorConfig = {
-    wildcard:
-      compiledConfig.wildcard === true && schema.config.wildcard === true,
+    wildcard: compiledConfig.wildcard === true && schema.config.wildcard === true,
     hasWildcard: false,
   };
 
@@ -99,12 +87,7 @@ function* runProcess(proc) {
         plainObject: 'matches',
       });
 
-    yield call(
-      [schema.instance, asynchronouslyLoadProcessSaga],
-      proc,
-      loadOnPattern,
-      SharedSchema,
-    );
+    yield call([schema.instance, asynchronouslyLoadProcessSaga], proc, loadOnPattern, SharedSchema);
   }
 
   if (schema.actionRoutes || schema.cancelTypes) {

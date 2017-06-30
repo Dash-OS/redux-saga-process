@@ -11,36 +11,23 @@ import saveToSharedSchema from '../utils/saveToSharedSchema';
  * @param  {[type]} Compiled     [description]
  * @return {[type]}              [description]
  */
-export default function parseSagaProcessActionCreators(
-  proc,
-  SharedSchema,
-  Compiled,
-) {
+export default function parseSagaProcessActionCreators(proc, SharedSchema) {
   const { schema } = proc;
   const { actionCreators = {} } = schema;
   if (!schema.compiled) {
     schema.compiled = {};
   }
-  for (let actionCreatorKey in actionCreators) {
-    buildActionCreator(
-      actionCreatorKey,
-      actionCreators[actionCreatorKey],
-      proc,
-    );
+  for (const actionCreatorKey of Object.keys(actionCreators)) {
+    buildActionCreator(actionCreatorKey, actionCreators[actionCreatorKey], proc);
   }
 
-  return saveToSharedSchema(
-    'compiled.public',
-    'actionCreators',
-    proc,
-    SharedSchema,
-  );
+  return saveToSharedSchema('compiled.public', 'actionCreators', proc, SharedSchema);
 }
 
 function createActionCreator(type, keys = [], merge = {}) {
-  let action = { type, ...merge };
+  const action = { type, ...merge };
   return (...args) => {
-    for (let key of keys) {
+    for (const key of keys) {
       action[key] = args.shift();
     }
     Object.assign(action, ...args);

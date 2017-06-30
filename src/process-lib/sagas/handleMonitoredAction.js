@@ -18,7 +18,7 @@ export default function* handleMonitoredActionSaga(action, proc) {
   parseActionForRoutes(action, actionRoutes, proc, executeRoutes);
 
   for (let route of executeRoutes) {
-    const original_route = route;
+    const originalRoute = route;
     if (typeof route !== 'function') {
       // if the matching route is not already a function then
       // the function is searched for within the Process instance
@@ -35,11 +35,11 @@ export default function* handleMonitoredActionSaga(action, proc) {
         proc,
         route,
         action,
-        original_route,
+        originalRoute,
       );
     } else {
       console.error(
-        `[process-manager]: action route | ${processID} -> ${processPath}.${original_route} | is not a function`,
+        `[process-manager]: action route | ${processID} -> ${processPath}.${originalRoute} | is not a function`,
       );
     }
   }

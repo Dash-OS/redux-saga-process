@@ -14,11 +14,7 @@ const defaulted = m => m.default;
   The Process has, however, been built and compiled so things such as
   initial state, exports, etc will all be available.
 */
-export default function* asynchronouslyLoadProcess(
-  proc,
-  pattern,
-  SharedSchema,
-) {
+export default function* asynchronouslyLoadProcess(proc, pattern, SharedSchema) {
   const { schema } = proc;
   const { processID, loadOnAction, loadProcess, instance } = schema;
 

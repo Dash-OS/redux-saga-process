@@ -1,3 +1,6 @@
+// We use the lodash webpack plugin to only extract the required lodash functions
+import _ from 'lodash';
+
 import {
   Processes,
   ProcessSchema,
@@ -12,33 +15,31 @@ import {
 import * as parseOption from './parsers';
 import * as compileOption from './compilers';
 
-// We use the lodash webpack plugin to only extract the required lodash functions
-import _ from 'lodash';
-
 /**
  * buildProcesses
  * @param  {Object}   processes         [description]
  * @param  {Object}   global_config     [description]
- * @param  {Function} configure_handler [description]
+ * @param  {Function} configureHandler [description]
  * @return {CompiledProcessReducers}           [description]
  *
  * buildProcesses is the first step.  It will evaluate the processes
  * given configuration and build a compiled Process which includes the
  * necessary reducers, selectors, etc.
  */
-export function buildProcesses(processes, global_config, configure_handler) {
+// eslint-disable-next-line
+export function buildProcesses(processes, globalConfig, configureHandler) {
   // set the default config and values, if previous tasks were
   // known, we will receive a killPromise that resolves when all
   // our previous tasks have been killed.
   // const killPromise = setContextDefaults(global_config);
-  setContextDefaults(global_config);
+  setContextDefaults(globalConfig);
 
   if (!_.isPlainObject(processes)) {
     throw new Error('[saga-process] buildProcesses expects a plain object');
   }
 
   // recursively search for processes and build our flat Maps.
-  searchForProcesses(processes, configure_handler);
+  searchForProcesses(processes, configureHandler);
 
   // compile our processes now that we have gathered them into our Map.
   compileSharedSchema();
@@ -52,7 +53,7 @@ export function buildProcesses(processes, global_config, configure_handler) {
 /**
  * searchForProcesses
  * @param  {Object}   processes         [description]
- * @param  {Function} configure_handler [description]
+ * @param  {Function} configureHandler [description]
  * @param  {String}   category          [description]
  *
  *  iterate through the received object and save any discovered processes into the
@@ -62,18 +63,11 @@ export function buildProcesses(processes, global_config, configure_handler) {
  *  { foo: { bar: MyProcess } } -> 'foo.bar.MyProcess'
  *
  */
-function searchForProcesses(processes, configure_handler, category) {
-  for (const processCategory in processes) {
-    const nextCategory =
-      `${(category && `${category}.`) || ''}` + processCategory;
+function searchForProcesses(processes, configureHandler, category) {
+  for (const processCategory of Object.keys(processes)) {
+    const nextCategory = `${(category && `${category}.`) || ''}${processCategory}`;
     const processClass = processes[processCategory];
-    formatProcessCategory(
-      category,
-      processCategory,
-      nextCategory,
-      processClass,
-      configure_handler,
-    );
+    formatProcessCategory(category, processCategory, nextCategory, processClass, configureHandler);
   }
 }
 
@@ -83,31 +77,23 @@ function searchForProcesses(processes, configure_handler, category) {
  * @param {String} processCategory
  * @param {String} nextCategory
  * @param {Process || Object || Function} processClass
- * @param {Function} configure_handler
+ * @param {Function} configureHandler
  */
 function formatProcessCategory(
   category,
   processCategory,
   nextCategory,
   processClass,
-  configure_handler,
+  configureHandler,
 ) {
   if (isProcess(processClass)) {
     // parse the received Process and compile if needed
     return handleDiscoveredProcess(nextCategory, processClass);
-  } else if (
-    typeof processClass === 'function' &&
-    typeof configure_handler === 'function'
-  ) {
-    return configureProcess(
-      processClass,
-      processCategory,
-      nextCategory,
-      configure_handler,
-    );
+  } else if (typeof processClass === 'function' && typeof configureHandler === 'function') {
+    return configureProcess(processClass, processCategory, nextCategory, configureHandler);
   } else if (_.isPlainObject(processClass)) {
     // check the next level for processes
-    return searchForProcesses(processClass, configure_handler, nextCategory);
+    return searchForProcesses(processClass, configureHandler, nextCategory);
   }
 }
 
@@ -117,55 +103,39 @@ function formatProcessCategory(
  *                                      when called with the users configuration.
  * @param  {[type]} processCategory     The current category of our Process.
  * @param  {[type]} nextCategory        The next category if we are further nested.
- * @param  {Function} configure_handler A function the user provides to configure a process
+ * @param  {Function} configureHandler A function the user provides to configure a process
  *                                      factory.
  *
  *   When we encounter a function during the build process which is not a Process
- *   itself, we will call the users configure_handler with the information about
+ *   itself, we will call the users configureHandler with the information about
  *   the Process
  */
-function configureProcess(
-  processClassFactory,
-  processCategory,
-  nextCategory,
-  configure_handler,
-) {
-  const configured_process = configure_handler(
-    processClassFactory,
-    processCategory,
-    nextCategory,
-  );
+function configureProcess(processClassFactory, processCategory, nextCategory, configureHandler) {
+  const configuredProcess = configureHandler(processClassFactory, processCategory, nextCategory);
 
-  if (isProcess(configured_process)) {
-    // If the configure_handler returns a valid process then we will use it
-    return handleDiscoveredProcess(nextCategory, configured_process);
-  } else if (
-    _.isPlainObject(configured_process) &&
-    isProcess(configured_process.process)
-  ) {
-    return handleDiscoveredProcess(
-      nextCategory,
-      formatConfiguredProcessObject(configured_process),
-    );
+  if (isProcess(configuredProcess)) {
+    // If the configureHandler returns a valid process then we will use it
+    return handleDiscoveredProcess(nextCategory, configuredProcess);
+  } else if (_.isPlainObject(configuredProcess) && isProcess(configuredProcess.process)) {
+    return handleDiscoveredProcess(nextCategory, formatConfiguredProcessObject(configuredProcess));
   }
 }
 
 /**
  * formatConfiguredProcessObject
- * @param  {Process || Object} configured_process
+ * @param  {Process || Object} configuredProcess
  * @return {Process}
  */
-function formatConfiguredProcessObject(configured_process) {
-  const processClass = configured_process.process;
-  for (const processProperty of Object.keys(configured_process)) {
+function formatConfiguredProcessObject(configuredProcess) {
+  const processClass = configuredProcess.process;
+  for (const processProperty of Object.keys(configuredProcess)) {
     /*
       If we receive an object of properties we add them as static
       properties to the Process for the user.
      */
-    if (processProperty === 'process') {
-      continue;
+    if (processProperty !== 'process') {
+      processClass[processProperty] = configuredProcess[processProperty];
     }
-    processClass[processProperty] = configured_process[processProperty];
   }
   return processClass;
 }
@@ -235,13 +205,7 @@ function handleSharedSchema(processClass) {
 function compileSharedSchema() {
   for (const [option, value] of SharedSchema) {
     if (typeof compileOption[option] === 'function') {
-      compileOption[option](
-        value,
-        Processes,
-        ProcessSchema,
-        SharedSchema,
-        Compiled,
-      );
+      compileOption[option](value, Processes, ProcessSchema, SharedSchema, Compiled);
     }
   }
 }

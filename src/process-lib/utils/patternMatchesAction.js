@@ -11,17 +11,14 @@ import ToReduxType from 'to-redux-type';
  * @param  {[type]} proc    [description]
  * @return {[type]}         [description]
  */
-export default function patternMatchesAction(action, pattern, proc) {
+export default function patternMatchesAction(action, pattern) {
   // const { monitor } = proc.schema;
 
   let response;
 
   if (typeof pattern === 'function') {
     response = pattern(action);
-  } else if (
-    typeof pattern === 'string' &&
-    ToReduxType(pattern) === action.type
-  ) {
+  } else if (typeof pattern === 'string' && ToReduxType(pattern) === action.type) {
     response = true;
   }
 
